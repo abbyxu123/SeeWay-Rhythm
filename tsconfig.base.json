@@ -12,7 +12,8 @@
     "paths": {
       "@seeway/agents": ["packages/agents/src/index.ts"],
       "@seeway/contracts": ["packages/contracts/src/index.ts"],
-      "@seeway/control-plane": ["packages/control-plane/src/index.ts"]
+      "@seeway/control-plane": ["packages/control-plane/src/index.ts"],
+      "@seeway/time-core": ["packages/time-core/src/index.ts"]
     }
   },
   "include": [
