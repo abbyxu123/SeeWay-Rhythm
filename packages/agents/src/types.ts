@@ -18,6 +18,7 @@ export interface DomainAgent {
   execute(
     request: unknown,
     context: AuthorizedContext,
+    signal?: AbortSignal,
   ): Promise<DeepReadonly<AgentReport>>;
 }
 

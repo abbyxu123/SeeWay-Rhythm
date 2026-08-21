@@ -10,6 +10,7 @@ import type {
 } from "@seeway/contracts";
 import {
   createOrchestrator,
+  createTestOrchestrator,
   getAgentDefinition,
   routeRequest,
   type DomainAgentDefinition,
@@ -32,7 +33,9 @@ function baseRequest(category: AgentRequest["category"]) {
   };
 }
 
-function availableDefinition(agentId: "qimen-finance" | "bazi-profile") {
+function availableDefinition(
+  agentId: "qimen-finance" | "bazi-profile" | "qimen-rhythm",
+) {
   const definition = getAgentDefinition(agentId);
   if (!definition || definition.role !== "domain") {
     throw new Error(`Missing ${agentId} definition.`);
@@ -86,6 +89,7 @@ function completeFakeAgent(
             evidenceIds: [`evidence-${definition.id}`],
           },
           tendency,
+          tendencyEvidenceIds: [`evidence-${definition.id}`],
         },
         evidence: [
           {
@@ -235,7 +239,7 @@ describe("orchestration vertical slice", () => {
         optionalAgentStates: {},
       };
     };
-    const orchestrator = createOrchestrator({
+    const orchestrator = createTestOrchestrator({
       agents: [primary, supporting],
       trustedDefinitions: [primary.definition, supporting.definition],
       clock: () => now,
@@ -282,7 +286,7 @@ describe("orchestration vertical slice", () => {
     const agent = completeFakeAgent(selfDeclared, "favorable", []);
 
     expect(() =>
-      createOrchestrator({
+      createTestOrchestrator({
         agents: [agent],
         trustedDefinitions: [trusted],
         clock: () => now,
@@ -309,6 +313,7 @@ describe("orchestration vertical slice", () => {
               evidenceIds: ["spoofed-evidence"],
             },
             tendency: "favorable",
+            tendencyEvidenceIds: ["spoofed-evidence"],
           },
           evidence: [
             {
@@ -327,7 +332,7 @@ describe("orchestration vertical slice", () => {
         };
       },
     };
-    const orchestrator = createOrchestrator({
+    const orchestrator = createTestOrchestrator({
       agents: [agent],
       trustedDefinitions: [definition],
       clock: () => now,
@@ -376,7 +381,7 @@ describe("orchestration vertical slice", () => {
       "caution",
       supportRuns,
     );
-    const orchestrator = createOrchestrator({
+    const orchestrator = createTestOrchestrator({
       agents: [primary, supporting],
       trustedDefinitions: [primary.definition, supporting.definition],
       clock: () => now,
@@ -393,6 +398,72 @@ describe("orchestration vertical slice", () => {
     ).rejects.toThrow(/explicitly enabled/i);
     expect(primaryRuns).toEqual([]);
     expect(supportRuns).toEqual([]);
+  });
+
+  it("rejects replacement routing that changes canonical primary semantics", async () => {
+    const definition = availableDefinition("qimen-rhythm");
+    const agent = completeFakeAgent(definition, "favorable", []);
+    const router = (rawInput: unknown): RoutingDecision => ({
+      ...readyFinanceRouter()(rawInput),
+      primaryAgentId: "qimen-rhythm",
+    });
+    const orchestrator = createTestOrchestrator({
+      agents: [agent],
+      trustedDefinitions: [definition],
+      clock: () => now,
+      router,
+    });
+
+    await expect(
+      orchestrator.execute({
+        ...baseRequest("finance"),
+        instrument: "AAPL",
+        investmentHorizon: "short-term",
+      }),
+    ).rejects.toThrow(/canonical primary|does not support finance/i);
+  });
+
+  it("rejects replacement routing that omits canonical required inputs", async () => {
+    const definition = availableDefinition("qimen-finance");
+    const agent = completeFakeAgent(definition, "favorable", []);
+    const router = (rawInput: unknown): RoutingDecision => ({
+      ...routeRequest(rawInput),
+      availability: "available",
+      status: "ready",
+      requiredInputs: [],
+    });
+    const orchestrator = createTestOrchestrator({
+      agents: [agent],
+      trustedDefinitions: [definition],
+      clock: () => now,
+      router,
+    });
+
+    await expect(
+      orchestrator.execute(baseRequest("finance")),
+    ).rejects.toThrow(/required inputs/i);
+  });
+
+  it("copies trusted test definitions before use", async () => {
+    const definition = availableDefinition("qimen-finance");
+    const agent = completeFakeAgent(definition, "favorable", []);
+    const orchestrator = createTestOrchestrator({
+      agents: [agent],
+      trustedDefinitions: [definition],
+      clock: () => now,
+      router: readyFinanceRouter(),
+    });
+    (definition as { availability: "available" | "unverified" }).availability =
+      "unverified";
+
+    const result = await orchestrator.execute({
+      ...baseRequest("finance"),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    });
+
+    expect(result.kind).toBe("result");
+    expect(result.status).toBe("complete");
   });
 
   it("projects minimum payloads and delivers finance inputs to the primary", async () => {
@@ -418,7 +489,7 @@ describe("orchestration vertical slice", () => {
         supportingContext = context;
       },
     );
-    const orchestrator = createOrchestrator({
+    const orchestrator = createTestOrchestrator({
       agents: [primary, supporting],
       trustedDefinitions: [primary.definition, supporting.definition],
       clock: () => now,
@@ -470,7 +541,7 @@ describe("orchestration vertical slice", () => {
         throw new Error("private broker token should never escape");
       },
     };
-    const orchestrator = createOrchestrator({
+    const orchestrator = createTestOrchestrator({
       agents: [agent],
       trustedDefinitions: [definition],
       clock: () => now,
@@ -500,13 +571,23 @@ describe("orchestration vertical slice", () => {
 
   it("turns an Agent timeout into the same sanitized error boundary", async () => {
     const definition = availableDefinition("qimen-finance");
+    let aborted = false;
     const agent: DomainAgent = {
       definition,
-      async execute() {
-        return await new Promise<never>(() => undefined);
+      async execute(_request, _context, signal) {
+        return await new Promise<never>((_resolve, reject) => {
+          signal?.addEventListener(
+            "abort",
+            () => {
+              aborted = true;
+              reject(new Error("cancelled private work"));
+            },
+            { once: true },
+          );
+        });
       },
     };
-    const orchestrator = createOrchestrator({
+    const orchestrator = createTestOrchestrator({
       agents: [agent],
       trustedDefinitions: [definition],
       clock: () => now,
@@ -529,6 +610,7 @@ describe("orchestration vertical slice", () => {
       errorCode: "AGENT_EXECUTION_FAILED",
       message: "Agent execution failed.",
     });
+    expect(aborted).toBe(true);
   });
 
   it("keeps a valid primary report when supporting execution fails", async () => {
@@ -544,7 +626,7 @@ describe("orchestration vertical slice", () => {
         throw new Error("sensitive supporting failure");
       },
     };
-    const orchestrator = createOrchestrator({
+    const orchestrator = createTestOrchestrator({
       agents: [primary, supporting],
       trustedDefinitions: [primary.definition, supportingDefinition],
       clock: () => now,
@@ -583,6 +665,46 @@ describe("orchestration vertical slice", () => {
     ]);
   });
 
+  it("sanitizes a malformed supporting report without discarding the primary", async () => {
+    const primary = completeFakeAgent(
+      availableDefinition("qimen-finance"),
+      "favorable",
+      [],
+    );
+    const supportingDefinition = availableDefinition("bazi-profile");
+    const supporting: DomainAgent = {
+      definition: supportingDefinition,
+      async execute(): Promise<AgentReport> {
+        return {} as AgentReport;
+      },
+    };
+    const orchestrator = createTestOrchestrator({
+      agents: [primary, supporting],
+      trustedDefinitions: [primary.definition, supportingDefinition],
+      clock: () => now,
+      router: readyFinanceRouter(["bazi-profile"]),
+    });
+
+    const result = await orchestrator.execute({
+      ...baseRequest("finance"),
+      profileScopes: ["current-location", "birth-data"],
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+      enabledSupportingAgentIds: ["bazi-profile"],
+    });
+
+    expect(result.kind).toBe("result");
+    if (result.kind !== "result") {
+      throw new Error("Expected a primary result.");
+    }
+    expect(result.status).toBe("complete");
+    expect(result.presentation.supporting[0]).toMatchObject({
+      agentId: "bazi-profile",
+      status: "error",
+      errorCode: "AGENT_EXECUTION_FAILED",
+    });
+  });
+
   it("does not freeze an injected router's caller-owned decision", async () => {
     const definition = availableDefinition("qimen-finance");
     const agent = completeFakeAgent(definition, "favorable", []);
@@ -591,7 +713,7 @@ describe("orchestration vertical slice", () => {
       callerOwnedDecision = readyFinanceRouter()(rawInput);
       return callerOwnedDecision;
     };
-    const orchestrator = createOrchestrator({
+    const orchestrator = createTestOrchestrator({
       agents: [agent],
       trustedDefinitions: [definition],
       clock: () => now,

@@ -30,6 +30,7 @@ const conclusion = {
     evidenceIds: ["ev-001"],
   },
   tendency: "mixed" as const,
+  tendencyEvidenceIds: ["ev-001"],
 };
 
 const reportBase = {
@@ -130,6 +131,10 @@ describe("Agent requests", () => {
       AgentRequestSchema.safeParse({ ...request, requestId: "   " }).success,
     ).toBe(false);
     expect(
+      AgentRequestSchema.safeParse({ ...request, timezone: "invalid/timezone" })
+        .success,
+    ).toBe(false);
+    expect(
       AgentRequestSchema.safeParse({ ...request, unrestricted: true }).success,
     ).toBe(false);
   });
@@ -200,6 +205,17 @@ describe("Agent reports", () => {
       AgentReportSchema.safeParse({
         ...reportBase,
         status: "complete",
+        evidence: [evidence],
+      }).success,
+    ).toBe(false);
+    expect(
+      AgentReportSchema.safeParse({
+        ...reportBase,
+        status: "complete",
+        conclusion: {
+          ...conclusion,
+          tendencyEvidenceIds: ["missing-evidence"],
+        },
         evidence: [evidence],
       }).success,
     ).toBe(false);

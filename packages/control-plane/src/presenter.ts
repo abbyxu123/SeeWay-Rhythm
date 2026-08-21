@@ -106,8 +106,8 @@ function comparisonEvidenceIds(
   supporting: CompleteAgentReport,
 ): string[] {
   return [
-    ...primary.evidence.map((item) => item.evidenceId),
-    ...supporting.evidence.map((item) => item.evidenceId),
+    ...primary.conclusion.tendencyEvidenceIds,
+    ...supporting.conclusion.tendencyEvidenceIds,
   ];
 }
 

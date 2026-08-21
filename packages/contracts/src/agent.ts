@@ -3,6 +3,17 @@ import { ConflictRefSchema, EvidenceRefSchema } from "./evidence";
 import { MemoryScopeSchema, ProfileScopeSchema } from "./memory";
 
 const NonEmptyStringSchema = z.string().trim().min(1);
+const TimezoneSchema = NonEmptyStringSchema.refine(
+  (timezone) => {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format();
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  { message: "Timezone must be a valid IANA timezone identifier." },
+);
 
 export const AgentIdSchema = z.enum([
   "orchestrator",
@@ -30,7 +41,7 @@ export const AgentRequestSchema = z
     category: IntentCategorySchema,
     questionTime: z.iso.datetime({ offset: true }),
     targetTime: z.iso.datetime({ offset: true }).optional(),
-    timezone: NonEmptyStringSchema,
+    timezone: TimezoneSchema,
     location: NonEmptyStringSchema.optional(),
     actors: z
       .array(
@@ -77,6 +88,12 @@ export const ConclusionSchema = z
     avoidDirection: TraceableClaimSchema.optional(),
     action: TraceableClaimSchema,
     tendency: TendencySchema,
+    tendencyEvidenceIds: z
+      .array(NonEmptyStringSchema)
+      .min(1)
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Tendency evidence IDs must be distinct.",
+      }),
   })
   .strict();
 
@@ -174,6 +191,15 @@ export const AgentReportSchema = z
             path: ["conclusion", "claims", claimIndex, "evidenceIds"],
           });
         }
+      }
+    }
+    for (const evidenceId of report.conclusion.tendencyEvidenceIds) {
+      if (!ownedEvidenceIds.has(evidenceId)) {
+        context.addIssue({
+          code: "custom",
+          message: `Tendency references unknown evidence: ${evidenceId}.`,
+          path: ["conclusion", "tendencyEvidenceIds"],
+        });
       }
     }
   });

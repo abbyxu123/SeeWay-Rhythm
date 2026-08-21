@@ -37,7 +37,11 @@ export type OrchestrationRequest = z.infer<typeof OrchestrationRequestSchema>;
 
 export interface ExecutableDomainAgent {
   readonly definition: DomainAgentDefinition;
-  execute(request: unknown, context: AuthorizedAgentContext): Promise<unknown>;
+  execute(
+    request: unknown,
+    context: AuthorizedAgentContext,
+    signal: AbortSignal,
+  ): Promise<unknown>;
 }
 
 export interface AuthorizedAgentContext {
@@ -86,19 +90,50 @@ export interface Orchestrator {
 
 interface OrchestratorOptions {
   readonly agents: readonly ExecutableDomainAgent[];
-  readonly trustedDefinitions?: readonly DomainAgentDefinition[];
   readonly clock: () => Date;
-  readonly router?: (request: unknown) => RoutingDecision;
   readonly agentTimeoutMs?: number;
 }
 
-export function createOrchestrator({
-  agents,
+interface TestOrchestratorOptions extends OrchestratorOptions {
+  readonly trustedDefinitions?: readonly DomainAgentDefinition[];
+  readonly router?: (request: unknown) => RoutingDecision;
+}
+
+interface InternalOrchestratorOptions extends OrchestratorOptions {
+  readonly trustedDefinitions: readonly DomainAgentDefinition[];
+  readonly router: (request: unknown) => RoutingDecision;
+}
+
+export function createOrchestrator(options: OrchestratorOptions): Orchestrator {
+  return createOrchestratorInternal({
+    ...options,
+    trustedDefinitions: canonicalDomainDefinitions(),
+    router: routeRequest,
+  });
+}
+
+export function createTestOrchestrator({
   trustedDefinitions = canonicalDomainDefinitions(),
-  clock,
   router = routeRequest,
+  ...options
+}: TestOrchestratorOptions): Orchestrator {
+  if (process.env.NODE_ENV !== "test") {
+    throw new Error("Test orchestrator overrides are disabled outside tests.");
+  }
+  return createOrchestratorInternal({
+    ...options,
+    trustedDefinitions,
+    router,
+  });
+}
+
+function createOrchestratorInternal({
+  agents,
+  trustedDefinitions,
+  clock,
+  router,
   agentTimeoutMs = 10_000,
-}: OrchestratorOptions): Orchestrator {
+}: InternalOrchestratorOptions): Orchestrator {
   if (!Number.isFinite(agentTimeoutMs) || agentTimeoutMs <= 0) {
     throw new Error("Agent timeout must be a positive finite number.");
   }
@@ -109,10 +144,18 @@ export function createOrchestrator({
     async execute(rawRequest: unknown): Promise<OrchestrationOutcome> {
       const request = OrchestrationRequestSchema.parse(rawRequest);
       const { disposition, ...routeInput } = request;
+      const canonicalRouting = routeRequest(routeInput);
       const routing = deepFreeze(
-        RoutingDecisionSchema.parse(router(routeInput)),
+        RoutingDecisionSchema.parse(
+          router === routeRequest ? canonicalRouting : router(routeInput),
+        ),
       );
-      assertTrustedRouting(request, routing, trustedDefinitionsById);
+      assertTrustedRouting(
+        request,
+        routing,
+        canonicalRouting,
+        trustedDefinitionsById,
+      );
       const emptyAudit = () =>
         createAudit(request.requestId, routing.primaryAgentId, [], {}, {}, clock);
 
@@ -287,9 +330,22 @@ function createTrustedDefinitionMap(
     if (map.has(definition.id)) {
       throw new Error(`Duplicate trusted Agent definition: ${definition.id}.`);
     }
-    map.set(definition.id, definition);
+    map.set(definition.id, cloneDefinition(definition));
   }
   return map;
+}
+
+function cloneDefinition(
+  definition: DomainAgentDefinition,
+): DomainAgentDefinition {
+  return Object.freeze({
+    ...definition,
+    capabilities: Object.freeze([...definition.capabilities]),
+    timeGranularities: Object.freeze([...definition.timeGranularities]),
+    requiredProfileScopes: Object.freeze([...definition.requiredProfileScopes]),
+    optionalProfileScopes: Object.freeze([...definition.optionalProfileScopes]),
+    allowedMemoryScopes: Object.freeze([...definition.allowedMemoryScopes]),
+  });
 }
 
 function createAgentMap(
@@ -329,12 +385,23 @@ function requireAgent(
 function assertTrustedRouting(
   request: OrchestrationRequest,
   routing: RoutingDecision,
+  canonicalRouting: RoutingDecision,
   trustedDefinitions: ReadonlyMap<DomainAgentId, DomainAgentDefinition>,
 ): void {
   const primary = trustedDefinitions.get(routing.primaryAgentId);
   if (!primary) {
     throw new Error(
       `Routing selected untrusted primary Agent ${routing.primaryAgentId}.`,
+    );
+  }
+  if (!primary.capabilities.includes(request.category)) {
+    throw new Error(
+      `Routing primary ${primary.id} does not support ${request.category}.`,
+    );
+  }
+  if (routing.primaryAgentId !== canonicalRouting.primaryAgentId) {
+    throw new Error(
+      `Routing primary ${routing.primaryAgentId} differs from canonical primary ${canonicalRouting.primaryAgentId}.`,
     );
   }
   if (routing.availability !== primary.availability) {
@@ -364,6 +431,53 @@ function assertTrustedRouting(
         `Supporting Agent ${agentId} was not explicitly enabled by the user.`,
       );
     }
+    const definition = trustedDefinitions.get(agentId);
+    const state = routing.supportingAgentStates[agentId];
+    if (!definition || !state) {
+      throw new Error(`Supporting Agent ${agentId} has no trusted state.`);
+    }
+    const missingProfileScopes = definition.requiredProfileScopes.filter(
+      (scope) => !request.profileScopes.includes(scope),
+    );
+    if (
+      definition.availability !== "available" ||
+      state.availability !== definition.availability ||
+      !sameValues(
+        state.requiredProfileScopes,
+        definition.requiredProfileScopes,
+      ) ||
+      !sameValues(state.missingProfileScopes, missingProfileScopes) ||
+      !state.executable
+    ) {
+      throw new Error(
+        `Supporting Agent ${agentId} has an inconsistent execution state.`,
+      );
+    }
+  }
+
+  if (!sameValues(routing.requiredInputs, canonicalRouting.requiredInputs)) {
+    throw new Error("Routing required inputs differ from the canonical policy.");
+  }
+  if (
+    !sameValues(
+      routing.selectedSupportingAgentIds,
+      canonicalRouting.selectedSupportingAgentIds,
+    )
+  ) {
+    throw new Error(
+      "Routing selected support differs from the canonical policy.",
+    );
+  }
+  const expectedStatus =
+    routing.requiredInputs.length > 0
+      ? "needs_input"
+      : primary.availability === "available"
+        ? "ready"
+        : "unavailable";
+  if (routing.status !== expectedStatus) {
+    throw new Error(
+      `Routing status ${routing.status} differs from expected ${expectedStatus}.`,
+    );
   }
 }
 
@@ -449,11 +563,14 @@ async function executeAgentSafely(
   clock: () => Date,
   timeoutMs: number,
 ): Promise<unknown> {
+  const controller = new AbortController();
   try {
-    return await withTimeout(
-      agent.executor.execute(request, context),
+    const rawReport = await withTimeout(
+      agent.executor.execute(request, context, controller.signal),
       timeoutMs,
+      () => controller.abort(),
     );
+    return AgentReportSchema.parse(rawReport);
   } catch {
     return AgentReportSchema.parse({
       agentId: agent.definition.id,
@@ -473,11 +590,15 @@ async function executeAgentSafely(
 async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
+  onTimeout: () => void,
 ): Promise<T> {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_resolve, reject) => {
     timeout = setTimeout(
-      () => reject(new Error("Agent execution timed out.")),
+      () => {
+        onTimeout();
+        reject(new Error("Agent execution timed out."));
+      },
       timeoutMs,
     );
   });

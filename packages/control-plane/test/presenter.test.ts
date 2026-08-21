@@ -30,6 +30,7 @@ function completeReport(
         evidenceIds: [evidenceId],
       },
       tendency,
+      tendencyEvidenceIds: [evidenceId],
     },
     evidence: [
       {
@@ -88,10 +89,18 @@ describe("multi-Agent presentation", () => {
   });
 
   it("marks opposing tendencies as a conflict without averaging them", () => {
-    const result = presentAgentReports(
-      completeReport("qimen-finance", "favorable", "ev-primary"),
-      [completeReport("bazi-profile", "caution", "ev-support")],
+    const primary = completeReport(
+      "qimen-finance",
+      "favorable",
+      "ev-primary",
     );
+    primary.evidence.push({
+      ...primary.evidence[0]!,
+      evidenceId: "ev-unrelated-context",
+    });
+    const result = presentAgentReports(primary, [
+      completeReport("bazi-profile", "caution", "ev-support"),
+    ]);
 
     if (result.primary.status !== "complete") {
       throw new Error("Expected a complete primary report.");
