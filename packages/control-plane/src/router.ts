@@ -1,6 +1,7 @@
 import {
   AgentIdSchema,
   AgentRequestSchema,
+  ProfileScopeSchema,
   type AgentId,
   type IntentCategory,
   type ProfileScope,
@@ -50,6 +51,46 @@ export interface RoutingDecision {
   readonly availability: AgentAvailability;
   readonly status: RoutingStatus;
 }
+
+const AgentAvailabilitySchema = z.enum(["available", "unverified"]);
+const RoutingStatusSchema = z.enum(["ready", "needs_input", "unavailable"]);
+const SupportingAgentStateSchema = z
+  .object({
+    availability: AgentAvailabilitySchema,
+    requiredProfileScopes: z.array(ProfileScopeSchema),
+    missingProfileScopes: z.array(ProfileScopeSchema),
+    executable: z.boolean(),
+  })
+  .strict();
+
+export const RoutingDecisionSchema = z
+  .object({
+    primaryAgentId: DomainAgentIdSchema,
+    primaryReason: NonEmptyStringSchema,
+    selectedSupportingAgentIds: z.array(DomainAgentIdSchema),
+    supportingAgentIds: z.array(DomainAgentIdSchema),
+    supportingReasons: z.partialRecord(
+      DomainAgentIdSchema,
+      NonEmptyStringSchema,
+    ),
+    supportingAgentStates: z.partialRecord(
+      DomainAgentIdSchema,
+      SupportingAgentStateSchema,
+    ),
+    optionalAgentIds: z.array(DomainAgentIdSchema),
+    optionalReasons: z.partialRecord(
+      DomainAgentIdSchema,
+      NonEmptyStringSchema,
+    ),
+    optionalAgentStates: z.partialRecord(
+      DomainAgentIdSchema,
+      SupportingAgentStateSchema,
+    ),
+    requiredInputs: z.array(NonEmptyStringSchema),
+    availability: AgentAvailabilitySchema,
+    status: RoutingStatusSchema,
+  })
+  .strict();
 
 const DefaultPrimaryByCategory = {
   rhythm: "qimen-rhythm",

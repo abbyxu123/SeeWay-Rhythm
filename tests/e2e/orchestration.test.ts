@@ -47,6 +47,7 @@ function completeFakeAgent(
   definition: DomainAgentDefinition,
   tendency: Tendency,
   seenCategories: string[],
+  observe?: (request: AgentRequest, context: AuthorizedContext) => void,
 ): DomainAgent {
   return {
     definition,
@@ -56,14 +57,34 @@ function completeFakeAgent(
     ): Promise<AgentReport> {
       const typedRequest = request as AgentRequest;
       seenCategories.push(typedRequest.category);
+      observe?.(typedRequest, _context);
       return {
         agentId: definition.id,
         agentVersion: "test-0.1.0",
         status: "complete",
         conclusion: {
-          favorable: tendency === "favorable" ? ["test favorable"] : [],
-          cautions: tendency === "caution" ? ["test caution"] : [],
-          action: "Keep both reports separate.",
+          favorable:
+            tendency === "favorable"
+              ? [
+                  {
+                    text: "test favorable",
+                    evidenceIds: [`evidence-${definition.id}`],
+                  },
+                ]
+              : [],
+          cautions:
+            tendency === "caution"
+              ? [
+                  {
+                    text: "test caution",
+                    evidenceIds: [`evidence-${definition.id}`],
+                  },
+                ]
+              : [],
+          action: {
+            text: "Keep both reports separate.",
+            evidenceIds: [`evidence-${definition.id}`],
+          },
           tendency,
         },
         evidence: [
@@ -82,6 +103,38 @@ function completeFakeAgent(
         generatedAt: now.toISOString(),
       };
     },
+  };
+}
+
+function readyFinanceRouter(
+  supportingAgentIds: readonly ("bazi-profile" | "ziwei-timeline")[] = [],
+) {
+  return (rawInput: unknown): RoutingDecision => {
+    const routed = routeRequest(rawInput);
+    return {
+      ...routed,
+      availability: "available",
+      status: "ready",
+      selectedSupportingAgentIds: supportingAgentIds,
+      supportingAgentIds,
+      supportingReasons: Object.fromEntries(
+        supportingAgentIds.map((agentId) => [agentId, "Enabled in this test."]),
+      ),
+      supportingAgentStates: Object.fromEntries(
+        supportingAgentIds.map((agentId) => [
+          agentId,
+          {
+            availability: "available",
+            requiredProfileScopes: ["birth-data"],
+            missingProfileScopes: [],
+            executable: true,
+          },
+        ]),
+      ),
+      optionalAgentIds: [],
+      optionalReasons: {},
+      optionalAgentStates: {},
+    };
   };
 }
 
@@ -184,6 +237,7 @@ describe("orchestration vertical slice", () => {
     };
     const orchestrator = createOrchestrator({
       agents: [primary, supporting],
+      trustedDefinitions: [primary.definition, supporting.definition],
       clock: () => now,
       router: testRouter,
     });
@@ -217,5 +271,340 @@ describe("orchestration vertical slice", () => {
       operations: [],
       deniedScopes: [],
     });
+  });
+
+  it("rejects an executor whose self-declared definition differs from the trusted registry", () => {
+    const trusted = availableDefinition("qimen-finance");
+    const selfDeclared = {
+      ...trusted,
+      requiredProfileScopes: [],
+    } satisfies DomainAgentDefinition;
+    const agent = completeFakeAgent(selfDeclared, "favorable", []);
+
+    expect(() =>
+      createOrchestrator({
+        agents: [agent],
+        trustedDefinitions: [trusted],
+        clock: () => now,
+      }),
+    ).toThrow(/trusted definition/i);
+  });
+
+  it("rejects a report that spoofs a different Agent identity", async () => {
+    const definition = availableDefinition("qimen-finance");
+    const agent: DomainAgent = {
+      definition,
+      async execute() {
+        return {
+          agentId: "bazi-profile",
+          agentVersion: "test-0.1.0",
+          status: "complete",
+          conclusion: {
+            favorable: [
+              { text: "test favorable", evidenceIds: ["spoofed-evidence"] },
+            ],
+            cautions: [],
+            action: {
+              text: "Test action.",
+              evidenceIds: ["spoofed-evidence"],
+            },
+            tendency: "favorable",
+          },
+          evidence: [
+            {
+              evidenceId: "spoofed-evidence",
+              ruleId: "TEST-SPOOF",
+              ruleVersion: "test-0.1.0",
+              sourceId: "test-source",
+              factPath: "test.spoof",
+              explanation: "Test-only spoofed report.",
+            },
+          ],
+          conflicts: [],
+          requiredInputs: [],
+          ruleVersion: "test-0.1.0",
+          generatedAt: now.toISOString(),
+        };
+      },
+    };
+    const orchestrator = createOrchestrator({
+      agents: [agent],
+      trustedDefinitions: [definition],
+      clock: () => now,
+      router: readyFinanceRouter(),
+    });
+
+    await expect(
+      orchestrator.execute({
+        ...baseRequest("finance"),
+        instrument: "AAPL",
+        investmentHorizon: "short-term",
+      }),
+    ).rejects.toThrow(/returned bazi-profile/i);
+  });
+
+  it("rejects a complete report from a canonically unverified Agent", async () => {
+    const definition = getAgentDefinition("qimen-finance");
+    if (!definition || definition.role !== "domain") {
+      throw new Error("Missing qimen-finance definition.");
+    }
+    const agent = completeFakeAgent(definition, "favorable", []);
+    const orchestrator = createOrchestrator({
+      agents: [agent],
+      clock: () => now,
+    });
+
+    await expect(
+      orchestrator.execute({
+        ...baseRequest("finance"),
+        instrument: "AAPL",
+        investmentHorizon: "short-term",
+      }),
+    ).rejects.toThrow(/unverified.*unsupported/i);
+  });
+
+  it("rejects a router that enables support without explicit user consent", async () => {
+    const primaryRuns: string[] = [];
+    const supportRuns: string[] = [];
+    const primary = completeFakeAgent(
+      availableDefinition("qimen-finance"),
+      "favorable",
+      primaryRuns,
+    );
+    const supporting = completeFakeAgent(
+      availableDefinition("bazi-profile"),
+      "caution",
+      supportRuns,
+    );
+    const orchestrator = createOrchestrator({
+      agents: [primary, supporting],
+      trustedDefinitions: [primary.definition, supporting.definition],
+      clock: () => now,
+      router: readyFinanceRouter(["bazi-profile"]),
+    });
+
+    await expect(
+      orchestrator.execute({
+        ...baseRequest("finance"),
+        profileScopes: ["current-location", "birth-data"],
+        instrument: "AAPL",
+        investmentHorizon: "short-term",
+      }),
+    ).rejects.toThrow(/explicitly enabled/i);
+    expect(primaryRuns).toEqual([]);
+    expect(supportRuns).toEqual([]);
+  });
+
+  it("projects minimum payloads and delivers finance inputs to the primary", async () => {
+    let primaryRequest: AgentRequest | undefined;
+    let primaryContext: AuthorizedContext | undefined;
+    let supportingRequest: AgentRequest | undefined;
+    let supportingContext: AuthorizedContext | undefined;
+    const primary = completeFakeAgent(
+      availableDefinition("qimen-finance"),
+      "favorable",
+      [],
+      (request, context) => {
+        primaryRequest = request;
+        primaryContext = context;
+      },
+    );
+    const supporting = completeFakeAgent(
+      availableDefinition("bazi-profile"),
+      "caution",
+      [],
+      (request, context) => {
+        supportingRequest = request;
+        supportingContext = context;
+      },
+    );
+    const orchestrator = createOrchestrator({
+      agents: [primary, supporting],
+      trustedDefinitions: [primary.definition, supporting.definition],
+      clock: () => now,
+      router: readyFinanceRouter(["bazi-profile"]),
+    });
+
+    await orchestrator.execute({
+      ...baseRequest("finance"),
+      location: "Shanghai",
+      actors: [{ role: "self" }],
+      profileScopes: ["current-location", "birth-data", "finance-profile"],
+      memoryScopes: ["finance", "timeline", "identity"],
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+      enabledSupportingAgentIds: ["bazi-profile"],
+    });
+
+    expect(primaryRequest).toMatchObject({
+      location: "Shanghai",
+      actors: [{ role: "self" }],
+      profileScopes: ["current-location", "birth-data", "finance-profile"],
+      memoryScopes: ["finance", "timeline"],
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    });
+    expect(primaryContext).toEqual({
+      profileScopes: ["current-location", "birth-data", "finance-profile"],
+      memoryScopes: ["finance", "timeline"],
+    });
+    expect(supportingRequest).toMatchObject({
+      profileScopes: ["birth-data"],
+      memoryScopes: ["timeline", "identity"],
+    });
+    expect(supportingRequest).not.toHaveProperty("location");
+    expect(supportingRequest).not.toHaveProperty("actors");
+    expect(supportingRequest).not.toHaveProperty("instrument");
+    expect(supportingRequest).not.toHaveProperty("investmentHorizon");
+    expect(supportingContext).toEqual({
+      profileScopes: ["birth-data"],
+      memoryScopes: ["timeline", "identity"],
+    });
+  });
+
+  it("turns a primary execution failure into a sanitized audited error report", async () => {
+    const definition = availableDefinition("qimen-finance");
+    const agent: DomainAgent = {
+      definition,
+      async execute() {
+        throw new Error("private broker token should never escape");
+      },
+    };
+    const orchestrator = createOrchestrator({
+      agents: [agent],
+      trustedDefinitions: [definition],
+      clock: () => now,
+      router: readyFinanceRouter(),
+    });
+
+    const result = await orchestrator.execute({
+      ...baseRequest("finance"),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    });
+
+    expect(result.kind).toBe("result");
+    if (result.kind !== "result") {
+      throw new Error("Expected an error result.");
+    }
+    expect(result.status).toBe("error");
+    expect(result.presentation.primary).toMatchObject({
+      agentId: "qimen-finance",
+      status: "error",
+      errorCode: "AGENT_EXECUTION_FAILED",
+      message: "Agent execution failed.",
+    });
+    expect(JSON.stringify(result)).not.toContain("private broker token");
+    expect(result.audit.executedAgentIds).toEqual(["qimen-finance"]);
+  });
+
+  it("turns an Agent timeout into the same sanitized error boundary", async () => {
+    const definition = availableDefinition("qimen-finance");
+    const agent: DomainAgent = {
+      definition,
+      async execute() {
+        return await new Promise<never>(() => undefined);
+      },
+    };
+    const orchestrator = createOrchestrator({
+      agents: [agent],
+      trustedDefinitions: [definition],
+      clock: () => now,
+      router: readyFinanceRouter(),
+      agentTimeoutMs: 5,
+    });
+
+    const result = await orchestrator.execute({
+      ...baseRequest("finance"),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    });
+
+    expect(result.kind).toBe("result");
+    if (result.kind !== "result") {
+      throw new Error("Expected a timeout result.");
+    }
+    expect(result.presentation.primary).toMatchObject({
+      status: "error",
+      errorCode: "AGENT_EXECUTION_FAILED",
+      message: "Agent execution failed.",
+    });
+  });
+
+  it("keeps a valid primary report when supporting execution fails", async () => {
+    const primary = completeFakeAgent(
+      availableDefinition("qimen-finance"),
+      "favorable",
+      [],
+    );
+    const supportingDefinition = availableDefinition("bazi-profile");
+    const supporting: DomainAgent = {
+      definition: supportingDefinition,
+      async execute() {
+        throw new Error("sensitive supporting failure");
+      },
+    };
+    const orchestrator = createOrchestrator({
+      agents: [primary, supporting],
+      trustedDefinitions: [primary.definition, supportingDefinition],
+      clock: () => now,
+      router: readyFinanceRouter(["bazi-profile"]),
+    });
+
+    const result = await orchestrator.execute({
+      ...baseRequest("finance"),
+      profileScopes: ["current-location", "birth-data"],
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+      enabledSupportingAgentIds: ["bazi-profile"],
+    });
+
+    expect(result.kind).toBe("result");
+    if (result.kind !== "result") {
+      throw new Error("Expected a primary result.");
+    }
+    expect(result.status).toBe("complete");
+    expect(result.presentation.supporting[0]).toMatchObject({
+      agentId: "bazi-profile",
+      status: "error",
+      errorCode: "AGENT_EXECUTION_FAILED",
+    });
+    expect(result.presentation.relationships).toEqual([
+      {
+        agentId: "bazi-profile",
+        relationship: "unavailable",
+        evidenceIds: [],
+      },
+    ]);
+    expect(JSON.stringify(result)).not.toContain("sensitive supporting failure");
+    expect(result.audit.executedAgentIds).toEqual([
+      "qimen-finance",
+      "bazi-profile",
+    ]);
+  });
+
+  it("does not freeze an injected router's caller-owned decision", async () => {
+    const definition = availableDefinition("qimen-finance");
+    const agent = completeFakeAgent(definition, "favorable", []);
+    let callerOwnedDecision: RoutingDecision | undefined;
+    const router = (rawInput: unknown): RoutingDecision => {
+      callerOwnedDecision = readyFinanceRouter()(rawInput);
+      return callerOwnedDecision;
+    };
+    const orchestrator = createOrchestrator({
+      agents: [agent],
+      trustedDefinitions: [definition],
+      clock: () => now,
+      router,
+    });
+
+    await orchestrator.execute({
+      ...baseRequest("finance"),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    });
+
+    expect(callerOwnedDecision).toBeDefined();
+    expect(Object.isFrozen(callerOwnedDecision)).toBe(false);
   });
 });

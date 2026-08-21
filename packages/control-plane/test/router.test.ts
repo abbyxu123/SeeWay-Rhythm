@@ -2,6 +2,7 @@ import type { AgentRequest, IntentCategory } from "@seeway/contracts";
 import { describe, expect, it } from "vitest";
 import {
   routeRequest,
+  RoutingDecisionSchema,
   RouteRequestInputSchema,
 } from "@seeway/control-plane";
 
@@ -219,5 +220,24 @@ describe("availability", () => {
     expect(Object.isFrozen(decision.supportingAgentStates["bazi-profile"])).toBe(
       true,
     );
+  });
+
+  it("validates routing decisions at runtime", () => {
+    const decision = routeRequest({
+      ...request("finance"),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    });
+
+    expect(RoutingDecisionSchema.safeParse(decision).success).toBe(true);
+    expect(
+      RoutingDecisionSchema.safeParse({ ...decision, unexpected: true }).success,
+    ).toBe(false);
+    expect(
+      RoutingDecisionSchema.safeParse({
+        ...decision,
+        primaryAgentId: "unknown-agent",
+      }).success,
+    ).toBe(false);
   });
 });

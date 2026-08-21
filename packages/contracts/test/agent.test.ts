@@ -21,11 +21,14 @@ const evidence = {
 };
 
 const conclusion = {
-  favorable: ["focused work"],
-  cautions: ["verbal commitments"],
-  supportiveDirection: "southeast",
-  avoidDirection: "northwest",
-  action: "Confirm important details in writing.",
+  favorable: [{ text: "focused work", evidenceIds: ["ev-001"] }],
+  cautions: [{ text: "verbal commitments", evidenceIds: ["ev-001"] }],
+  supportiveDirection: { text: "southeast", evidenceIds: ["ev-001"] },
+  avoidDirection: { text: "northwest", evidenceIds: ["ev-001"] },
+  action: {
+    text: "Confirm important details in writing.",
+    evidenceIds: ["ev-001"],
+  },
   tendency: "mixed" as const,
 };
 
@@ -79,6 +82,22 @@ describe("Agent requests", () => {
 
   it("parses explicit profile and memory grants", () => {
     expect(AgentRequestSchema.parse(request)).toEqual(request);
+  });
+
+  it("carries validated finance inputs to the domain Agent", () => {
+    const financeRequest = {
+      ...request,
+      category: "finance" as const,
+      requestedAgent: "qimen-finance" as const,
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    };
+
+    expect(AgentRequestSchema.parse(financeRequest)).toEqual(financeRequest);
+    expect(
+      AgentRequestSchema.safeParse({ ...financeRequest, instrument: "   " })
+        .success,
+    ).toBe(false);
   });
 
   it("rejects unknown grants and unknown requested Agents", () => {
@@ -199,6 +218,36 @@ describe("Agent reports", () => {
         conclusion,
         evidence: [evidence],
         requiredInputs: ["birth-time"],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires every conclusion and conflict reference to resolve locally", () => {
+    expect(
+      AgentReportSchema.safeParse({
+        ...reportBase,
+        status: "complete",
+        conclusion: {
+          ...conclusion,
+          action: { ...conclusion.action, evidenceIds: ["missing-evidence"] },
+        },
+        evidence: [evidence],
+      }).success,
+    ).toBe(false);
+    expect(
+      AgentReportSchema.safeParse({
+        ...reportBase,
+        status: "complete",
+        conclusion,
+        evidence: [evidence],
+        conflicts: [
+          {
+            conflictId: "conflict-missing-evidence",
+            evidenceIds: ["ev-001", "missing-evidence"],
+            explanation: "One conflict reference is not owned by the report.",
+            resolution: "unresolved",
+          },
+        ],
       }).success,
     ).toBe(false);
   });

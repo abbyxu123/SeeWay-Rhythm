@@ -42,6 +42,8 @@ export const AgentRequestSchema = z
           .strict(),
       )
       .optional(),
+    instrument: NonEmptyStringSchema.optional(),
+    investmentHorizon: NonEmptyStringSchema.optional(),
     profileScopes: z.array(ProfileScopeSchema),
     memoryScopes: z.array(MemoryScopeSchema),
     requestedAgent: AgentIdSchema.optional(),
@@ -55,13 +57,25 @@ export const TendencySchema = z.enum([
   "insufficient",
 ]);
 
+export const TraceableClaimSchema = z
+  .object({
+    text: NonEmptyStringSchema,
+    evidenceIds: z
+      .array(NonEmptyStringSchema)
+      .min(1)
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Claim evidence IDs must be distinct.",
+      }),
+  })
+  .strict();
+
 export const ConclusionSchema = z
   .object({
-    favorable: z.array(NonEmptyStringSchema),
-    cautions: z.array(NonEmptyStringSchema),
-    supportiveDirection: NonEmptyStringSchema.optional(),
-    avoidDirection: NonEmptyStringSchema.optional(),
-    action: NonEmptyStringSchema,
+    favorable: z.array(TraceableClaimSchema),
+    cautions: z.array(TraceableClaimSchema),
+    supportiveDirection: TraceableClaimSchema.optional(),
+    avoidDirection: TraceableClaimSchema.optional(),
+    action: TraceableClaimSchema,
     tendency: TendencySchema,
   })
   .strict();
@@ -118,17 +132,57 @@ export const ErrorAgentReportSchema = z
   })
   .strict();
 
-export const AgentReportSchema = z.discriminatedUnion("status", [
-  CompleteAgentReportSchema,
-  NeedsInputAgentReportSchema,
-  UnsupportedAgentReportSchema,
-  ErrorAgentReportSchema,
-]);
+export const AgentReportSchema = z
+  .discriminatedUnion("status", [
+    CompleteAgentReportSchema,
+    NeedsInputAgentReportSchema,
+    UnsupportedAgentReportSchema,
+    ErrorAgentReportSchema,
+  ])
+  .superRefine((report, context) => {
+    const ownedEvidenceIds = new Set(
+      report.evidence.map((item) => item.evidenceId),
+    );
+    for (const [conflictIndex, conflict] of report.conflicts.entries()) {
+      for (const evidenceId of conflict.evidenceIds) {
+        if (!ownedEvidenceIds.has(evidenceId)) {
+          context.addIssue({
+            code: "custom",
+            message: `Conflict references unknown evidence: ${evidenceId}.`,
+            path: ["conflicts", conflictIndex, "evidenceIds"],
+          });
+        }
+      }
+    }
+
+    if (report.status !== "complete") {
+      return;
+    }
+    const claims = [
+      ...report.conclusion.favorable,
+      ...report.conclusion.cautions,
+      report.conclusion.supportiveDirection,
+      report.conclusion.avoidDirection,
+      report.conclusion.action,
+    ].filter((claim) => claim !== undefined);
+    for (const [claimIndex, claim] of claims.entries()) {
+      for (const evidenceId of claim.evidenceIds) {
+        if (!ownedEvidenceIds.has(evidenceId)) {
+          context.addIssue({
+            code: "custom",
+            message: `Conclusion references unknown evidence: ${evidenceId}.`,
+            path: ["conclusion", "claims", claimIndex, "evidenceIds"],
+          });
+        }
+      }
+    }
+  });
 
 export type AgentId = z.infer<typeof AgentIdSchema>;
 export type IntentCategory = z.infer<typeof IntentCategorySchema>;
 export type AgentRequest = z.infer<typeof AgentRequestSchema>;
 export type Tendency = z.infer<typeof TendencySchema>;
+export type TraceableClaim = z.infer<typeof TraceableClaimSchema>;
 export type Conclusion = z.infer<typeof ConclusionSchema>;
 export type CompleteAgentReport = z.infer<typeof CompleteAgentReportSchema>;
 export type NeedsInputAgentReport = z.infer<

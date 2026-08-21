@@ -17,9 +17,18 @@ function completeReport(
     agentVersion: "0.1.0",
     status: "complete" as const,
     conclusion: {
-      favorable: tendency === "favorable" ? ["focused work"] : [],
-      cautions: tendency === "caution" ? ["verbal commitments"] : [],
-      action: "Keep the decision traceable.",
+      favorable:
+        tendency === "favorable"
+          ? [{ text: "focused work", evidenceIds: [evidenceId] }]
+          : [],
+      cautions:
+        tendency === "caution"
+          ? [{ text: "verbal commitments", evidenceIds: [evidenceId] }]
+          : [],
+      action: {
+        text: "Keep the decision traceable.",
+        evidenceIds: [evidenceId],
+      },
       tendency,
     },
     evidence: [
