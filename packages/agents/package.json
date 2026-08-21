@@ -1,0 +1,14 @@
+{
+  "name": "@seeway/agents",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@seeway/contracts": "1.0.0",
+    "@seeway/control-plane": "1.0.0"
+  }
+}
