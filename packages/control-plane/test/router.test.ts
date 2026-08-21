@@ -153,6 +153,17 @@ describe("finance routing", () => {
     });
   });
 
+  it("never describes an unselected optional Agent as selected", () => {
+    const decision = routeRequest({
+      ...request("finance", { profileScopes: ["birth-data"] }),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    });
+
+    expect(decision.optionalReasons["bazi-profile"]).toMatch(/optional/i);
+    expect(decision.optionalReasons["bazi-profile"]).not.toMatch(/selected/i);
+  });
+
   it("asks for one missing finance input at a time in stable order", () => {
     expect(routeRequest(request("finance")).requiredInputs).toEqual([
       "instrument",

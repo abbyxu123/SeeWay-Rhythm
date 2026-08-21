@@ -104,10 +104,12 @@ export function routeRequest(rawInput: unknown): RoutingDecision {
   const supportingReasons = createReasonMap(
     selectedSupportingAgentIds,
     supportingAgentStates,
+    true,
   );
   const optionalReasons = createReasonMap(
     optionalAgentIds,
     optionalAgentStates,
+    false,
   );
 
   return Object.freeze({
@@ -202,12 +204,13 @@ function createAgentStates(
 function createReasonMap(
   agentIds: readonly DomainAgentId[],
   states: Readonly<Partial<Record<DomainAgentId, SupportingAgentState>>>,
+  selected: boolean,
 ): Readonly<Partial<Record<DomainAgentId, string>>> {
   return Object.freeze(
     Object.fromEntries(
       agentIds.map((agentId) => [
         agentId,
-        supportReason(agentId, states[agentId]),
+        supportReason(agentId, states[agentId], selected),
       ]),
     ),
   );
@@ -216,12 +219,15 @@ function createReasonMap(
 function supportReason(
   agentId: DomainAgentId,
   state: SupportingAgentState | undefined,
+  selected: boolean,
 ): string {
   if (state && state.missingProfileScopes.length > 0) {
     return `${agentId} requires explicit profile grants: ${state.missingProfileScopes.join(", ")}.`;
   }
   if (state?.availability === "unverified") {
-    return `${agentId} is selected as context but its calculator is not verified yet.`;
+    return selected
+      ? `${agentId} is selected as context but its calculator is not verified yet.`
+      : `${agentId} is an optional context Agent whose calculator is not verified yet.`;
   }
   if (agentId === "bazi-profile") {
     return "Adds an optional personal background layer from granted birth data.";
