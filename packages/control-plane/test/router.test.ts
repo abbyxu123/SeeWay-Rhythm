@@ -1,6 +1,9 @@
 import type { AgentRequest, IntentCategory } from "@seeway/contracts";
 import { describe, expect, it } from "vitest";
-import { routeRequest } from "@seeway/control-plane";
+import {
+  routeRequest,
+  RouteRequestInputSchema,
+} from "@seeway/control-plane";
 
 function request(
   category: IntentCategory,
@@ -56,6 +59,26 @@ describe("primary Agent routing", () => {
       routeRequest(request("finance", { requestedAgent: "bazi-profile" })),
     ).toThrow(/does not support/i);
   });
+
+  it("rejects malformed runtime inputs instead of defaulting", () => {
+    for (const requestedAgent of ["", null, 0]) {
+      expect(() =>
+        routeRequest({ ...request("rhythm"), requestedAgent }),
+      ).toThrow();
+    }
+    expect(() =>
+      routeRequest({
+        ...request("finance"),
+        enabledSupportingAgentIds: ["orchestrator"],
+      }),
+    ).toThrow();
+    expect(
+      RouteRequestInputSchema.safeParse({
+        ...request("finance"),
+        instrument: "   ",
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("finance routing", () => {
@@ -77,17 +100,57 @@ describe("finance routing", () => {
     });
   });
 
-  it("enables only explicitly selected optional Agents", () => {
+  it("records selected support but blocks unverified Agents from execution", () => {
     const decision = routeRequest({
-      ...request("finance"),
+      ...request("finance", { profileScopes: ["birth-data"] }),
       instrument: "AAPL",
       investmentHorizon: "short-term",
       enabledSupportingAgentIds: ["bazi-profile"],
     });
 
-    expect(decision.supportingAgentIds).toEqual(["bazi-profile"]);
+    expect(decision.selectedSupportingAgentIds).toEqual(["bazi-profile"]);
+    expect(decision.supportingAgentIds).toEqual([]);
     expect(decision.optionalAgentIds).toEqual(["ziwei-timeline"]);
     expect(decision.supportingReasons["bazi-profile"]).toBeTruthy();
+    expect(decision.supportingAgentStates["bazi-profile"]).toEqual({
+      availability: "unverified",
+      requiredProfileScopes: ["birth-data"],
+      missingProfileScopes: [],
+      executable: false,
+    });
+  });
+
+  it("blocks selected support when required profile data is not granted", () => {
+    const decision = routeRequest({
+      ...request("finance"),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+      enabledSupportingAgentIds: ["bazi-profile", "bazi-profile"],
+    });
+
+    expect(decision.selectedSupportingAgentIds).toEqual(["bazi-profile"]);
+    expect(decision.supportingAgentIds).toEqual([]);
+    expect(decision.supportingAgentStates["bazi-profile"]).toMatchObject({
+      missingProfileScopes: ["birth-data"],
+      executable: false,
+    });
+  });
+
+  it("exposes availability for optional suggestions", () => {
+    const decision = routeRequest({
+      ...request("finance"),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+    });
+
+    expect(decision.optionalAgentStates["bazi-profile"]).toMatchObject({
+      availability: "unverified",
+      requiredProfileScopes: ["birth-data"],
+    });
+    expect(decision.optionalAgentStates["ziwei-timeline"]).toMatchObject({
+      availability: "unverified",
+      requiredProfileScopes: ["birth-data"],
+    });
   });
 
   it("asks for one missing finance input at a time in stable order", () => {
@@ -125,5 +188,25 @@ describe("availability", () => {
       status: "needs_input",
       requiredInputs: ["instrument"],
     });
+  });
+
+  it("returns a deeply immutable routing decision", () => {
+    const decision = routeRequest({
+      ...request("finance"),
+      instrument: "AAPL",
+      investmentHorizon: "short-term",
+      enabledSupportingAgentIds: ["bazi-profile"],
+    });
+
+    expect(Object.isFrozen(decision)).toBe(true);
+    expect(Object.isFrozen(decision.supportingAgentIds)).toBe(true);
+    expect(Object.isFrozen(decision.selectedSupportingAgentIds)).toBe(true);
+    expect(Object.isFrozen(decision.optionalAgentIds)).toBe(true);
+    expect(Object.isFrozen(decision.supportingReasons)).toBe(true);
+    expect(Object.isFrozen(decision.optionalReasons)).toBe(true);
+    expect(Object.isFrozen(decision.supportingAgentStates)).toBe(true);
+    expect(Object.isFrozen(decision.supportingAgentStates["bazi-profile"])).toBe(
+      true,
+    );
   });
 });

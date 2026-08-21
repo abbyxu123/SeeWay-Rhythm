@@ -1,8 +1,11 @@
-import type {
-  AgentId,
-  AgentRequest,
-  IntentCategory,
+import {
+  AgentIdSchema,
+  AgentRequestSchema,
+  type AgentId,
+  type IntentCategory,
+  type ProfileScope,
 } from "@seeway/contracts";
+import { z } from "zod";
 import {
   getAgentDefinition,
   type AgentAvailability,
@@ -11,19 +14,38 @@ import {
 export type DomainAgentId = Exclude<AgentId, "orchestrator">;
 export type RoutingStatus = "ready" | "needs_input" | "unavailable";
 
-export type RouteRequestInput = AgentRequest & {
-  readonly instrument?: string;
-  readonly investmentHorizon?: string;
-  readonly enabledSupportingAgentIds?: readonly DomainAgentId[];
-};
+const DomainAgentIdSchema = AgentIdSchema.exclude(["orchestrator"]);
+const NonEmptyStringSchema = z.string().trim().min(1);
+
+export const RouteRequestInputSchema = AgentRequestSchema.extend({
+  instrument: NonEmptyStringSchema.optional(),
+  investmentHorizon: NonEmptyStringSchema.optional(),
+  enabledSupportingAgentIds: z.array(DomainAgentIdSchema).optional(),
+}).strict();
+
+export type RouteRequestInput = z.infer<typeof RouteRequestInputSchema>;
+
+export interface SupportingAgentState {
+  readonly availability: AgentAvailability;
+  readonly requiredProfileScopes: readonly ProfileScope[];
+  readonly missingProfileScopes: readonly ProfileScope[];
+  readonly executable: boolean;
+}
 
 export interface RoutingDecision {
   readonly primaryAgentId: DomainAgentId;
   readonly primaryReason: string;
+  readonly selectedSupportingAgentIds: readonly DomainAgentId[];
   readonly supportingAgentIds: readonly DomainAgentId[];
   readonly supportingReasons: Readonly<Partial<Record<DomainAgentId, string>>>;
+  readonly supportingAgentStates: Readonly<
+    Partial<Record<DomainAgentId, SupportingAgentState>>
+  >;
   readonly optionalAgentIds: readonly DomainAgentId[];
   readonly optionalReasons: Readonly<Partial<Record<DomainAgentId, string>>>;
+  readonly optionalAgentStates: Readonly<
+    Partial<Record<DomainAgentId, SupportingAgentState>>
+  >;
   readonly requiredInputs: readonly string[];
   readonly availability: AgentAvailability;
   readonly status: RoutingStatus;
@@ -43,7 +65,8 @@ const FinanceOptionalAgents = [
   "ziwei-timeline",
 ] as const satisfies readonly DomainAgentId[];
 
-export function routeRequest(input: RouteRequestInput): RoutingDecision {
+export function routeRequest(rawInput: unknown): RoutingDecision {
+  const input = RouteRequestInputSchema.parse(rawInput);
   const primaryAgentId = choosePrimary(input);
   const primaryAgent = requireDomainAgent(primaryAgentId);
   const requiredInputs = findNextRequiredInput(input);
@@ -59,29 +82,47 @@ export function routeRequest(input: RouteRequestInput): RoutingDecision {
     }
   }
 
-  const supportingAgentIds = optionalCandidates.filter((agentId) =>
+  const selectedSupportingAgentIds = optionalCandidates.filter((agentId) =>
     enabledAgents.has(agentId),
   );
   const optionalAgentIds = optionalCandidates.filter(
     (agentId) => !enabledAgents.has(agentId),
   );
-  const supportingReasons = Object.fromEntries(
-    supportingAgentIds.map((agentId) => [agentId, supportReason(agentId)]),
+  const supportingAgentStates = createAgentStates(
+    selectedSupportingAgentIds,
+    input.profileScopes,
+    true,
   );
-  const optionalReasons = Object.fromEntries(
-    optionalAgentIds.map((agentId) => [agentId, supportReason(agentId)]),
+  const optionalAgentStates = createAgentStates(
+    optionalAgentIds,
+    input.profileScopes,
+    false,
+  );
+  const supportingAgentIds = selectedSupportingAgentIds.filter(
+    (agentId) => supportingAgentStates[agentId]?.executable,
+  );
+  const supportingReasons = createReasonMap(
+    selectedSupportingAgentIds,
+    supportingAgentStates,
+  );
+  const optionalReasons = createReasonMap(
+    optionalAgentIds,
+    optionalAgentStates,
   );
 
-  return {
+  return Object.freeze({
     primaryAgentId,
-    primaryReason: input.requestedAgent
+    primaryReason: input.requestedAgent !== undefined
       ? `The user explicitly selected ${primaryAgentId}.`
       : `The ${input.category} category maps to ${primaryAgentId}.`,
-    supportingAgentIds,
+    selectedSupportingAgentIds: Object.freeze(selectedSupportingAgentIds),
+    supportingAgentIds: Object.freeze(supportingAgentIds),
     supportingReasons,
-    optionalAgentIds,
+    supportingAgentStates,
+    optionalAgentIds: Object.freeze(optionalAgentIds),
     optionalReasons,
-    requiredInputs,
+    optionalAgentStates,
+    requiredInputs: Object.freeze([...requiredInputs]),
     availability: primaryAgent.availability,
     status:
       requiredInputs.length > 0
@@ -89,11 +130,11 @@ export function routeRequest(input: RouteRequestInput): RoutingDecision {
         : primaryAgent.availability === "unverified"
           ? "unavailable"
           : "ready",
-  };
+  });
 }
 
 function choosePrimary(input: RouteRequestInput): DomainAgentId {
-  if (!input.requestedAgent) {
+  if (input.requestedAgent === undefined) {
     return DefaultPrimaryByCategory[input.category];
   }
 
@@ -132,12 +173,61 @@ function requireDomainAgent(agentId: DomainAgentId) {
   return agent;
 }
 
-function supportReason(agentId: DomainAgentId): string {
+function createAgentStates(
+  agentIds: readonly DomainAgentId[],
+  grantedProfileScopes: readonly ProfileScope[],
+  selected: boolean,
+): Readonly<Partial<Record<DomainAgentId, SupportingAgentState>>> {
+  const granted = new Set(grantedProfileScopes);
+  const entries = agentIds.map((agentId) => {
+    const agent = requireDomainAgent(agentId);
+    const requiredProfileScopes = [...agent.requiredProfileScopes];
+    const missingProfileScopes = requiredProfileScopes.filter(
+      (scope) => !granted.has(scope),
+    );
+    const state = Object.freeze({
+      availability: agent.availability,
+      requiredProfileScopes: Object.freeze(requiredProfileScopes),
+      missingProfileScopes: Object.freeze(missingProfileScopes),
+      executable:
+        selected &&
+        agent.availability === "available" &&
+        missingProfileScopes.length === 0,
+    });
+    return [agentId, state] as const;
+  });
+  return Object.freeze(Object.fromEntries(entries));
+}
+
+function createReasonMap(
+  agentIds: readonly DomainAgentId[],
+  states: Readonly<Partial<Record<DomainAgentId, SupportingAgentState>>>,
+): Readonly<Partial<Record<DomainAgentId, string>>> {
+  return Object.freeze(
+    Object.fromEntries(
+      agentIds.map((agentId) => [
+        agentId,
+        supportReason(agentId, states[agentId]),
+      ]),
+    ),
+  );
+}
+
+function supportReason(
+  agentId: DomainAgentId,
+  state: SupportingAgentState | undefined,
+): string {
+  if (state && state.missingProfileScopes.length > 0) {
+    return `${agentId} requires explicit profile grants: ${state.missingProfileScopes.join(", ")}.`;
+  }
+  if (state?.availability === "unverified") {
+    return `${agentId} is selected as context but its calculator is not verified yet.`;
+  }
   if (agentId === "bazi-profile") {
-    return "Adds an optional personal background layer when birth data is granted.";
+    return "Adds an optional personal background layer from granted birth data.";
   }
   if (agentId === "ziwei-timeline") {
-    return "Adds an optional long-term timeline background when birth data is granted.";
+    return "Adds an optional long-term timeline background from granted birth data.";
   }
   return `Adds optional context from ${agentId}.`;
 }
