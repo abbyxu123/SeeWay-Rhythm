@@ -10,7 +10,8 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@seeway/contracts": ["packages/contracts/src/index.ts"]
+      "@seeway/contracts": ["packages/contracts/src/index.ts"],
+      "@seeway/control-plane": ["packages/control-plane/src/index.ts"]
     }
   },
   "include": [
