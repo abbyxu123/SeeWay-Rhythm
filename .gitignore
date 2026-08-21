@@ -1,0 +1,16 @@
+.DS_Store
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+
+# Copyrighted and private research materials stay on the local machine.
+/reference materials/
+
+# User profiles, birth data, recordings, and generated local state are private.
+/data/private/
+/data/audio/
+/data/runtime/
+
