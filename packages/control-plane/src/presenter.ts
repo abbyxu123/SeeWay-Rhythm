@@ -35,9 +35,7 @@ export function presentAgentReports(
     ),
   );
   const relationships = Object.freeze(
-    supporting.map((report) =>
-      Object.freeze(relationshipFor(primary, report)),
-    ),
+    supporting.map((report) => deepFreeze(relationshipFor(primary, report))),
   );
 
   return Object.freeze({

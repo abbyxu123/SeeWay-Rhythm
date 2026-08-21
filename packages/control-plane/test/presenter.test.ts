@@ -160,5 +160,6 @@ describe("multi-Agent presentation", () => {
     expect(Object.isFrozen(result.supporting)).toBe(true);
     expect(Object.isFrozen(result.relationships)).toBe(true);
     expect(Object.isFrozen(result.relationships[0])).toBe(true);
+    expect(Object.isFrozen(result.relationships[0]?.evidenceIds)).toBe(true);
   });
 });
