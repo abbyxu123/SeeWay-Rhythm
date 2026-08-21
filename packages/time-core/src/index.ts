@@ -10,3 +10,11 @@ export type {
   CivilTimePrecision,
   ResolvedCivilTime,
 } from "./civil-time";
+
+export { shichenFor } from "./shichen";
+export type {
+  EarthlyBranch,
+  ShichenIndex,
+  ShichenNext,
+  ShichenPeriod,
+} from "./shichen";
