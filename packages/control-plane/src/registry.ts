@@ -7,6 +7,11 @@ import type {
 
 export type AgentRole = "orchestrator" | "domain";
 export type AgentAvailability = "available" | "unverified";
+export type CalculationCore =
+  | "qimen-core"
+  | "ziwei-core"
+  | "bazi-core"
+  | "meihua-core";
 export type TimeGranularity =
   | "period"
   | "question"
@@ -16,20 +21,34 @@ export type TimeGranularity =
   | "lifetime"
   | "market-session";
 
-export interface AgentDefinition {
-  readonly id: AgentId;
-  readonly role: AgentRole;
+interface AgentDefinitionBase {
   readonly capabilities: readonly IntentCategory[];
   readonly timeGranularities: readonly TimeGranularity[];
-  readonly calculationCore: string | null;
   readonly requiredProfileScopes: readonly ProfileScope[];
   readonly optionalProfileScopes: readonly ProfileScope[];
   readonly allowedMemoryScopes: readonly MemoryScope[];
+}
+
+export interface OrchestratorAgentDefinition extends AgentDefinitionBase {
+  readonly id: "orchestrator";
+  readonly role: "orchestrator";
+  readonly calculationCore: null;
+  readonly availability: "available";
+}
+
+export interface DomainAgentDefinition extends AgentDefinitionBase {
+  readonly id: Exclude<AgentId, "orchestrator">;
+  readonly role: "domain";
+  readonly calculationCore: CalculationCore;
   readonly availability: AgentAvailability;
 }
 
-const definitions = [
-  {
+export type AgentDefinition =
+  | OrchestratorAgentDefinition
+  | DomainAgentDefinition;
+
+const definitionsById = {
+  orchestrator: {
     id: "orchestrator",
     role: "orchestrator",
     capabilities: ["rhythm", "query", "timeline", "profile", "finance", "meihua"],
@@ -48,7 +67,7 @@ const definitions = [
     allowedMemoryScopes: [],
     availability: "available",
   },
-  {
+  "qimen-rhythm": {
     id: "qimen-rhythm",
     role: "domain",
     capabilities: ["rhythm"],
@@ -59,7 +78,7 @@ const definitions = [
     allowedMemoryScopes: ["preferences", "timeline"],
     availability: "unverified",
   },
-  {
+  "qimen-query": {
     id: "qimen-query",
     role: "domain",
     capabilities: ["query"],
@@ -75,7 +94,7 @@ const definitions = [
     ],
     availability: "unverified",
   },
-  {
+  "ziwei-timeline": {
     id: "ziwei-timeline",
     role: "domain",
     capabilities: ["timeline"],
@@ -86,7 +105,7 @@ const definitions = [
     allowedMemoryScopes: ["identity", "preferences", "timeline"],
     availability: "unverified",
   },
-  {
+  "bazi-profile": {
     id: "bazi-profile",
     role: "domain",
     capabilities: ["profile"],
@@ -97,7 +116,7 @@ const definitions = [
     allowedMemoryScopes: ["identity", "preferences", "timeline"],
     availability: "unverified",
   },
-  {
+  "qimen-finance": {
     id: "qimen-finance",
     role: "domain",
     capabilities: ["finance"],
@@ -108,7 +127,7 @@ const definitions = [
     allowedMemoryScopes: ["preferences", "timeline", "finance"],
     availability: "unverified",
   },
-  {
+  meihua: {
     id: "meihua",
     role: "domain",
     capabilities: ["meihua"],
@@ -119,7 +138,17 @@ const definitions = [
     allowedMemoryScopes: ["preferences", "timeline"],
     availability: "unverified",
   },
-] as const satisfies readonly AgentDefinition[];
+} as const satisfies Readonly<Record<AgentId, AgentDefinition>>;
+
+const agentOrder = [
+  "orchestrator",
+  "qimen-rhythm",
+  "qimen-query",
+  "ziwei-timeline",
+  "bazi-profile",
+  "qimen-finance",
+  "meihua",
+] as const satisfies readonly AgentId[];
 
 function freezeDefinition(definition: AgentDefinition): AgentDefinition {
   return Object.freeze({
@@ -133,7 +162,7 @@ function freezeDefinition(definition: AgentDefinition): AgentDefinition {
 }
 
 export const agentRegistry: readonly AgentDefinition[] = Object.freeze(
-  definitions.map(freezeDefinition),
+  agentOrder.map((agentId) => freezeDefinition(definitionsById[agentId])),
 );
 
 export function getAgentDefinition(
