@@ -17,9 +17,17 @@ export interface RelationshipReport {
   readonly evidenceIds: readonly string[];
 }
 
+export type DeepReadonly<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends readonly (infer TItem)[]
+    ? readonly DeepReadonly<TItem>[]
+    : T extends object
+      ? { readonly [TKey in keyof T]: DeepReadonly<T[TKey]> }
+      : T;
+
 export interface PresentedResult {
-  readonly primary: AgentReport;
-  readonly supporting: readonly AgentReport[];
+  readonly primary: DeepReadonly<AgentReport>;
+  readonly supporting: readonly DeepReadonly<AgentReport>[];
   readonly relationships: readonly RelationshipReport[];
   readonly overallStatus: AgentReport["status"];
 }
@@ -28,15 +36,19 @@ export function presentAgentReports(
   rawPrimary: unknown,
   rawSupporting: readonly unknown[],
 ): PresentedResult {
-  const primary = deepFreeze(AgentReportSchema.parse(rawPrimary));
-  const supporting = Object.freeze(
-    rawSupporting.map((report) =>
-      deepFreeze(AgentReportSchema.parse(report)),
+  const parsedPrimary = AgentReportSchema.parse(rawPrimary);
+  const parsedSupporting = rawSupporting.map((report) =>
+    AgentReportSchema.parse(report),
+  );
+  assertDistinctAgents(parsedPrimary, parsedSupporting);
+  assertUniqueEvidenceIds([parsedPrimary, ...parsedSupporting]);
+  const relationships = Object.freeze(
+    parsedSupporting.map((report) =>
+      deepFreeze(relationshipFor(parsedPrimary, report)),
     ),
   );
-  const relationships = Object.freeze(
-    supporting.map((report) => deepFreeze(relationshipFor(primary, report))),
-  );
+  const primary = deepFreeze(parsedPrimary);
+  const supporting = Object.freeze(parsedSupporting.map(deepFreeze));
 
   return Object.freeze({
     primary,
@@ -62,10 +74,7 @@ function relationshipFor(
   return {
     agentId: supporting.agentId,
     relationship,
-    evidenceIds:
-      relationship === "conflict"
-        ? uniqueEvidenceIds(primary, supporting)
-        : supporting.evidence.map((item) => item.evidenceId),
+    evidenceIds: comparisonEvidenceIds(primary, supporting),
   };
 }
 
@@ -73,10 +82,6 @@ function compareCompleteReports(
   primary: CompleteAgentReport,
   supporting: CompleteAgentReport,
 ): Exclude<AgentRelationship, "unavailable"> {
-  if (hasUnresolvedConflict(primary) || hasUnresolvedConflict(supporting)) {
-    return "conflict";
-  }
-
   const primaryTendency = primary.conclusion.tendency;
   const supportingTendency = supporting.conclusion.tendency;
   if (
@@ -96,30 +101,52 @@ function compareCompleteReports(
   return "modifies";
 }
 
-function hasUnresolvedConflict(report: CompleteAgentReport): boolean {
-  return report.conflicts.some(
-    (conflict) => conflict.resolution === "unresolved",
-  );
-}
-
-function uniqueEvidenceIds(
+function comparisonEvidenceIds(
   primary: CompleteAgentReport,
   supporting: CompleteAgentReport,
 ): string[] {
   return [
-    ...new Set([
-      ...primary.evidence.map((item) => item.evidenceId),
-      ...supporting.evidence.map((item) => item.evidenceId),
-    ]),
+    ...primary.evidence.map((item) => item.evidenceId),
+    ...supporting.evidence.map((item) => item.evidenceId),
   ];
 }
 
-function deepFreeze<T>(value: T): T {
+function assertDistinctAgents(
+  primary: AgentReport,
+  supporting: readonly AgentReport[],
+): void {
+  const seen = new Set<AgentId>([primary.agentId]);
+  for (const report of supporting) {
+    if (report.agentId === primary.agentId) {
+      throw new Error(
+        `Supporting Agent ${report.agentId} cannot be the primary Agent.`,
+      );
+    }
+    if (seen.has(report.agentId)) {
+      throw new Error(`Duplicate supporting Agent: ${report.agentId}.`);
+    }
+    seen.add(report.agentId);
+  }
+}
+
+function assertUniqueEvidenceIds(reports: readonly AgentReport[]): void {
+  const seen = new Set<string>();
+  for (const report of reports) {
+    for (const evidence of report.evidence) {
+      if (seen.has(evidence.evidenceId)) {
+        throw new Error(`Duplicate evidence ID: ${evidence.evidenceId}.`);
+      }
+      seen.add(evidence.evidenceId);
+    }
+  }
+}
+
+function deepFreeze<T>(value: T): DeepReadonly<T> {
   if (value && typeof value === "object" && !Object.isFrozen(value)) {
     for (const nested of Object.values(value)) {
       deepFreeze(nested);
     }
     Object.freeze(value);
   }
-  return value;
+  return value as DeepReadonly<T>;
 }

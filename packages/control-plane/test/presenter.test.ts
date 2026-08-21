@@ -1,4 +1,9 @@
-import type { AgentId, Tendency } from "@seeway/contracts";
+import type {
+  AgentId,
+  CompleteAgentReport,
+  Tendency,
+  UnsupportedAgentReport,
+} from "@seeway/contracts";
 import { describe, expect, it } from "vitest";
 import { presentAgentReports } from "@seeway/control-plane";
 
@@ -6,7 +11,7 @@ function completeReport(
   agentId: AgentId,
   tendency: Tendency,
   evidenceId: string,
-) {
+): CompleteAgentReport {
   return {
     agentId,
     agentVersion: "0.1.0",
@@ -34,7 +39,7 @@ function completeReport(
   };
 }
 
-function unsupportedReport(agentId: AgentId) {
+function unsupportedReport(agentId: AgentId): UnsupportedAgentReport {
   return {
     agentId,
     agentVersion: "0.1.0",
@@ -66,7 +71,7 @@ describe("multi-Agent presentation", () => {
       {
         agentId: "bazi-profile",
         relationship: "supports",
-        evidenceIds: ["ev-support"],
+        evidenceIds: ["ev-primary", "ev-support"],
       },
     ]);
     expect("conclusion" in result).toBe(false);
@@ -110,6 +115,37 @@ describe("multi-Agent presentation", () => {
       "modifies",
       "modifies",
     ]);
+    expect(result.relationships[0]?.evidenceIds).toEqual([
+      "ev-primary",
+      "ev-mixed",
+    ]);
+  });
+
+  it("does not turn an internal unresolved conflict into a cross-Agent conflict", () => {
+    const primary = completeReport(
+      "qimen-finance",
+      "favorable",
+      "ev-primary",
+    );
+    primary.conflicts = [
+      {
+        conflictId: "internal-conflict",
+        evidenceIds: ["ev-primary", "ev-internal"],
+        explanation: "Two internal rules require later resolution.",
+        resolution: "unresolved",
+      },
+    ];
+    primary.evidence.push({
+      ...primary.evidence[0]!,
+      evidenceId: "ev-internal",
+    });
+
+    const result = presentAgentReports(primary, [
+      completeReport("bazi-profile", "favorable", "ev-support"),
+    ]);
+
+    expect(result.relationships[0]?.relationship).toBe("supports");
+    expect(result.primary.conflicts).toHaveLength(1);
   });
 
   it("does not let unsupported support invalidate a complete primary", () => {
@@ -146,6 +182,49 @@ describe("multi-Agent presentation", () => {
         [],
       ),
     ).toThrow();
+  });
+
+  it("rejects duplicate and self-referencing supporting Agents", () => {
+    const primary = completeReport(
+      "qimen-finance",
+      "favorable",
+      "ev-primary",
+    );
+    const support = completeReport(
+      "bazi-profile",
+      "favorable",
+      "ev-support",
+    );
+
+    expect(() => presentAgentReports(primary, [support, support])).toThrow(
+      /duplicate supporting agent/i,
+    );
+    expect(() =>
+      presentAgentReports(primary, [
+        completeReport("qimen-finance", "favorable", "ev-self"),
+      ]),
+    ).toThrow(/primary agent/i);
+  });
+
+  it("rejects duplicate or colliding evidence IDs", () => {
+    const duplicateWithinReport = completeReport(
+      "qimen-finance",
+      "favorable",
+      "ev-duplicate",
+    );
+    duplicateWithinReport.evidence.push({
+      ...duplicateWithinReport.evidence[0]!,
+    });
+    expect(() => presentAgentReports(duplicateWithinReport, [])).toThrow(
+      /duplicate evidence id/i,
+    );
+
+    expect(() =>
+      presentAgentReports(
+        completeReport("qimen-finance", "favorable", "ev-collision"),
+        [completeReport("bazi-profile", "caution", "ev-collision")],
+      ),
+    ).toThrow(/duplicate evidence id/i);
   });
 
   it("returns deeply immutable reports and relationships", () => {
