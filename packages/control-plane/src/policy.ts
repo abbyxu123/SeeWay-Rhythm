@@ -32,7 +32,7 @@ function authorizeScopes<TScope extends string>(
   const allowed: TScope[] = [];
   const denied: TScope[] = [];
 
-  for (const scope of requestedScopes) {
+  for (const scope of new Set(requestedScopes)) {
     if (granted.has(scope) && declared.has(scope)) {
       allowed.push(scope);
     } else {
@@ -40,7 +40,10 @@ function authorizeScopes<TScope extends string>(
     }
   }
 
-  return { allowed, denied };
+  return Object.freeze({
+    allowed: Object.freeze(allowed),
+    denied: Object.freeze(denied),
+  });
 }
 
 export function authorizeContext({
@@ -94,34 +97,76 @@ export interface PersistenceAuthorization {
   readonly allowed: boolean;
   readonly operations: readonly PersistenceOperation[];
   readonly deniedScopes: readonly MemoryScope[];
+  readonly reasonCode?: "UNKNOWN_DISPOSITION";
 }
 
 interface PersistenceAuthorizationInput {
+  readonly agentId: AgentId;
   readonly disposition: PersistenceDisposition;
   readonly grantedScopes: readonly MemoryScope[];
 }
 
+const PersistenceDispositions = new Set<string>([
+  "once",
+  "save_timeline",
+  "bookmark",
+  "add_note",
+]);
+
 export function authorizePersistence({
+  agentId,
   disposition,
   grantedScopes,
 }: PersistenceAuthorizationInput): PersistenceAuthorization {
-  if (disposition === "once") {
-    return { allowed: true, operations: [], deniedScopes: [] };
+  const agent = requireAgent(agentId);
+
+  if (!PersistenceDispositions.has(disposition)) {
+    return freezePersistenceAuthorization({
+      allowed: false,
+      operations: [],
+      deniedScopes: [],
+      reasonCode: "UNKNOWN_DISPOSITION",
+    });
   }
 
-  if (!grantedScopes.includes("timeline")) {
-    return {
+  if (disposition === "once") {
+    return freezePersistenceAuthorization({
+      allowed: true,
+      operations: [],
+      deniedScopes: [],
+    });
+  }
+
+  if (
+    !grantedScopes.includes("timeline") ||
+    !agent.allowedMemoryScopes.includes("timeline")
+  ) {
+    return freezePersistenceAuthorization({
       allowed: false,
       operations: [],
       deniedScopes: ["timeline"],
-    };
+    });
   }
 
-  return {
+  return freezePersistenceAuthorization({
     allowed: true,
     operations: [{ type: disposition, scope: "timeline" }],
     deniedScopes: [],
+  });
+}
+
+function freezePersistenceAuthorization(
+  authorization: PersistenceAuthorization,
+): PersistenceAuthorization {
+  const operations = authorization.operations.map((operation) =>
+    Object.freeze({ ...operation }),
+  );
+  const frozen = {
+    ...authorization,
+    operations: Object.freeze(operations),
+    deniedScopes: Object.freeze([...authorization.deniedScopes]),
   };
+  return Object.freeze(frozen);
 }
 
 function requireAgent(agentId: AgentId) {
