@@ -4,6 +4,7 @@ import {
   AgentReportSchema,
   AgentRequestSchema,
   ConclusionSchema,
+  ConflictRefSchema,
   EvidenceRefSchema,
   MemoryScopeSchema,
   ProfileScopeSchema,
@@ -100,6 +101,19 @@ describe("Agent requests", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("rejects malformed timestamps, blank fields, and unknown keys", () => {
+    expect(
+      AgentRequestSchema.safeParse({ ...request, questionTime: "not-a-date" })
+        .success,
+    ).toBe(false);
+    expect(
+      AgentRequestSchema.safeParse({ ...request, requestId: "   " }).success,
+    ).toBe(false);
+    expect(
+      AgentRequestSchema.safeParse({ ...request, unrestricted: true }).success,
+    ).toBe(false);
+  });
 });
 
 describe("Evidence references", () => {
@@ -119,6 +133,23 @@ describe("Evidence references", () => {
       expect(EvidenceRefSchema.safeParse(invalidEvidence).success, field).toBe(false);
     }
   });
+
+  it("requires two distinct evidence IDs for a conflict", () => {
+    const conflict = {
+      conflictId: "conflict-001",
+      evidenceIds: ["ev-001", "ev-002"],
+      explanation: "The verified rules point in opposite directions.",
+      resolution: "unresolved" as const,
+    };
+
+    expect(ConflictRefSchema.safeParse(conflict).success).toBe(true);
+    expect(
+      ConflictRefSchema.safeParse({
+        ...conflict,
+        evidenceIds: ["ev-001", "ev-001"],
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("Agent reports", () => {
@@ -129,6 +160,18 @@ describe("Agent reports", () => {
         status: "complete",
         conclusion,
         evidence: [evidence],
+      }).success,
+    ).toBe(true);
+  });
+
+  it("accepts a traceable chart snapshot reference", () => {
+    expect(
+      AgentReportSchema.safeParse({
+        ...reportBase,
+        status: "complete",
+        conclusion,
+        evidence: [evidence],
+        chartSnapshotId: "chart-001",
       }).success,
     ).toBe(true);
   });

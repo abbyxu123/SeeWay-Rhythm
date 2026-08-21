@@ -69,6 +69,7 @@ export const ConclusionSchema = z
 const ReportCommonShape = {
   agentId: AgentIdSchema,
   agentVersion: NonEmptyStringSchema,
+  chartSnapshotId: NonEmptyStringSchema.optional(),
   conflicts: z.array(ConflictRefSchema),
   requiredInputs: z.array(NonEmptyStringSchema),
   ruleVersion: NonEmptyStringSchema,

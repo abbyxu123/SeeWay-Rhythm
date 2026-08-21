@@ -29,7 +29,12 @@ export const ConflictResolutionSchema = z.enum([
 export const ConflictRefSchema = z
   .object({
     conflictId: NonEmptyStringSchema,
-    evidenceIds: z.array(NonEmptyStringSchema).min(2),
+    evidenceIds: z
+      .array(NonEmptyStringSchema)
+      .min(2)
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Conflict evidence IDs must be distinct.",
+      }),
     explanation: NonEmptyStringSchema,
     resolution: ConflictResolutionSchema,
   })
