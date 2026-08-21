@@ -3,7 +3,6 @@ import {
   type AgentRequest,
   type IntentCategory,
 } from "@seeway/contracts";
-import { agentRegistry } from "@seeway/control-plane";
 import { describe, expect, it } from "vitest";
 import {
   createUnsupportedAgent,
@@ -17,7 +16,10 @@ const context: AuthorizedContext = {
   memoryScopes: [],
 };
 
-function request(category: IntentCategory): AgentRequest {
+function request(
+  category: IntentCategory,
+  overrides: Partial<AgentRequest> = {},
+): AgentRequest {
   return {
     requestId: `req-${category}`,
     intent: `Handle a ${category} request`,
@@ -26,6 +28,7 @@ function request(category: IntentCategory): AgentRequest {
     timezone: "Asia/Shanghai",
     profileScopes: [],
     memoryScopes: [],
+    ...overrides,
   };
 }
 
@@ -76,13 +79,7 @@ describe("unsupported domain Agent adapters", () => {
   });
 
   it("rejects malformed and incompatible requests", async () => {
-    const definition = agentRegistry.find(
-      (agent) => agent.id === "qimen-rhythm",
-    );
-    if (!definition || definition.role !== "domain") {
-      throw new Error("Missing qimen-rhythm definition.");
-    }
-    const agent = createUnsupportedAgent(definition, {
+    const agent = createUnsupportedAgent("qimen-rhythm", {
       clock: () => fixedNow,
     });
 
@@ -90,6 +87,51 @@ describe("unsupported domain Agent adapters", () => {
     await expect(agent.execute(request("finance"), context)).rejects.toThrow(
       /does not support/i,
     );
+    await expect(
+      agent.execute(
+        request("rhythm", { requestedAgent: "qimen-query" }),
+        context,
+      ),
+    ).rejects.toThrow(/requested agent/i);
+  });
+
+  it("accepts only canonical unverified domain Agent IDs", () => {
+    expect(() =>
+      createUnsupportedAgent("orchestrator" as "qimen-rhythm", {
+        clock: () => fixedNow,
+      }),
+    ).toThrow(/domain agent/i);
+    expect(() =>
+      createUnsupportedAgent("forged-agent" as "qimen-rhythm", {
+        clock: () => fixedNow,
+      }),
+    ).toThrow(/domain agent/i);
+
+    const agent = createUnsupportedAgent("qimen-rhythm", {
+      clock: () => fixedNow,
+    });
+    expect(Object.isFrozen(agent.definition)).toBe(true);
+    expect(agent.definition.id).toBe("qimen-rhythm");
+  });
+
+  it("binds rule metadata to the canonical calculation core", async () => {
+    const agent = createUnsupportedAgent("qimen-finance", {
+      clock: () => fixedNow,
+    });
+    const report = await agent.execute(
+      request("finance", { requestedAgent: "qimen-finance" }),
+      context,
+    );
+
+    if (report.status !== "unsupported") {
+      throw new Error("Expected an unsupported report.");
+    }
+    expect(report.ruleVersion).toBe("qimen-core-unverified");
+    expect(report.reason).toContain("qimen-core");
+    expect(report.prerequisites).toEqual([
+      "qimen-core implementation",
+      "qimen-core golden cases",
+    ]);
   });
 
   it("returns deeply immutable unsupported reports", async () => {

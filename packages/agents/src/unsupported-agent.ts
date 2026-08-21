@@ -1,4 +1,5 @@
 import {
+  AgentReportSchema,
   AgentRequestSchema,
   type AgentReport,
   type UnsupportedAgentReport,
@@ -6,7 +7,9 @@ import {
 import {
   agentRegistry,
   type DeepReadonly,
+  type DomainAgentId,
   type DomainAgentDefinition,
+  getAgentDefinition,
 } from "@seeway/control-plane";
 import type {
   AgentClockOptions,
@@ -17,9 +20,13 @@ import type {
 const AgentVersion = "0.1.0";
 
 export function createUnsupportedAgent(
-  definition: DomainAgentDefinition,
+  agentId: DomainAgentId,
   { clock }: AgentClockOptions,
 ): DomainAgent {
+  const definition = getAgentDefinition(agentId);
+  if (!definition || definition.role !== "domain") {
+    throw new Error(`Unknown domain Agent: ${agentId}.`);
+  }
   if (definition.availability !== "unverified") {
     throw new Error(
       `Agent ${definition.id} is available and cannot use an unsupported adapter.`,
@@ -36,6 +43,14 @@ export function createUnsupportedAgent(
       if (!definition.capabilities.includes(request.category)) {
         throw new Error(
           `Agent ${definition.id} does not support ${request.category}.`,
+        );
+      }
+      if (
+        request.requestedAgent !== undefined &&
+        request.requestedAgent !== definition.id
+      ) {
+        throw new Error(
+          `Requested Agent ${request.requestedAgent} does not match ${definition.id}.`,
         );
       }
 
@@ -55,7 +70,7 @@ export function createUnsupportedAgent(
           `${definition.calculationCore} golden cases`,
         ],
       };
-      return deepFreeze(report);
+      return deepFreeze(AgentReportSchema.parse(report));
     },
   });
 }
@@ -69,7 +84,7 @@ export function createUnsupportedAgentSet(
         definition.role === "domain" &&
         definition.availability === "unverified",
     )
-    .map((definition) => createUnsupportedAgent(definition, options));
+    .map((definition) => createUnsupportedAgent(definition.id, options));
   return Object.freeze(agents);
 }
 
