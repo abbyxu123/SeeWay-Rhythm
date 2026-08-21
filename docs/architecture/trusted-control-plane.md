@@ -16,7 +16,7 @@
 | `qimen-finance` | 金融研究场景 | `qimen-core` | `unverified` |
 | `meihua` | 按需起卦问事 | `meihua-core` | `unverified` |
 
-`unverified` 不是“精度较低”，而是该计算器尚未通过规则口径、金样和边界测试。对应适配器只能返回 `unsupported`，不得返回有利、不利、方向或建议。
+`unverified` 不是“精度较低”，而是该计算器尚未通过规则口径、金样和边界测试。对应适配器正常执行时只能返回 `unsupported`，不得返回有利、不利、方向或建议；若适配器自身异常、超时或返回畸形数据，中台只允许转换为脱敏 `error`。
 
 ## 已实现的执行顺序
 

@@ -368,6 +368,57 @@ describe("orchestration vertical slice", () => {
     ).rejects.toThrow(/unverified.*unsupported/i);
   });
 
+  it.each(["throws", "malformed", "timeout"] as const)(
+    "returns a sanitized error when an unverified Agent %s",
+    async (failureMode) => {
+      const definition = getAgentDefinition("qimen-finance");
+      if (!definition || definition.role !== "domain") {
+        throw new Error("Missing qimen-finance definition.");
+      }
+      const agent: DomainAgent = {
+        definition,
+        async execute(_request, _context, signal) {
+          if (failureMode === "throws") {
+            throw new Error("private unverified failure");
+          }
+          if (failureMode === "malformed") {
+            return {} as AgentReport;
+          }
+          return await new Promise<never>((_resolve, reject) => {
+            signal?.addEventListener(
+              "abort",
+              () => reject(new Error("private cancelled work")),
+              { once: true },
+            );
+          });
+        },
+      };
+      const orchestrator = createOrchestrator({
+        agents: [agent],
+        clock: () => now,
+        agentTimeoutMs: 5,
+      });
+
+      const result = await orchestrator.execute({
+        ...baseRequest("finance"),
+        instrument: "AAPL",
+        investmentHorizon: "short-term",
+      });
+
+      expect(result.kind).toBe("result");
+      if (result.kind !== "result") {
+        throw new Error("Expected a sanitized error result.");
+      }
+      expect(result.presentation.primary).toMatchObject({
+        agentId: "qimen-finance",
+        status: "error",
+        errorCode: "AGENT_EXECUTION_FAILED",
+        message: "Agent execution failed.",
+      });
+      expect(JSON.stringify(result)).not.toContain("private");
+    },
+  );
+
   it("rejects a router that enables support without explicit user consent", async () => {
     const primaryRuns: string[] = [];
     const supportRuns: string[] = [];
@@ -531,6 +582,40 @@ describe("orchestration vertical slice", () => {
       profileScopes: ["birth-data"],
       memoryScopes: ["timeline", "identity"],
     });
+  });
+
+  it("removes surplus finance fields from a non-finance primary request", async () => {
+    let seenRequest: AgentRequest | undefined;
+    const definition = availableDefinition("qimen-rhythm");
+    const agent = completeFakeAgent(
+      definition,
+      "favorable",
+      [],
+      (request) => {
+        seenRequest = request;
+      },
+    );
+    const router = (rawInput: unknown): RoutingDecision => ({
+      ...routeRequest(rawInput),
+      availability: "available",
+      status: "ready",
+    });
+    const orchestrator = createTestOrchestrator({
+      agents: [agent],
+      trustedDefinitions: [definition],
+      clock: () => now,
+      router,
+    });
+
+    await orchestrator.execute({
+      ...baseRequest("rhythm"),
+      instrument: "surplus-secret-symbol",
+      investmentHorizon: "surplus-horizon",
+    });
+
+    expect(seenRequest).toBeDefined();
+    expect(seenRequest).not.toHaveProperty("instrument");
+    expect(seenRequest).not.toHaveProperty("investmentHorizon");
   });
 
   it("turns a primary execution failure into a sanitized audited error report", async () => {

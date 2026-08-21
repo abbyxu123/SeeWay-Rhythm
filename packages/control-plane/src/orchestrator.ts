@@ -518,10 +518,11 @@ function validateAgentReport(
   }
   if (
     definition.availability === "unverified" &&
-    report.status !== "unsupported"
+    report.status !== "unsupported" &&
+    report.status !== "error"
   ) {
     throw new Error(
-      `Unverified Agent ${definition.id} must return unsupported.`,
+      `Unverified Agent ${definition.id} may only return unsupported or error.`,
     );
   }
   return report;
@@ -701,10 +702,14 @@ function baseAgentRequest(
     ...(includePrimaryTaskData && request.actors !== undefined
       ? { actors: request.actors }
       : {}),
-    ...(includePrimaryTaskData && request.instrument !== undefined
+    ...(includePrimaryTaskData &&
+    overrides.category === "finance" &&
+    request.instrument !== undefined
       ? { instrument: request.instrument }
       : {}),
-    ...(includePrimaryTaskData && request.investmentHorizon !== undefined
+    ...(includePrimaryTaskData &&
+    overrides.category === "finance" &&
+    request.investmentHorizon !== undefined
       ? { investmentHorizon: request.investmentHorizon }
       : {}),
     profileScopes: context.profileScopes,
