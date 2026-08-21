@@ -4,7 +4,7 @@
 
 **Goal:** Build a deterministic civil-time and Chinese calendar core, then establish the verified data contracts and golden-case gate required before implementing Zhang Zhichun rotating Qimen charts.
 
-**Architecture:** `time-core` owns timezone resolution, shichen boundaries, solar terms, lunar dates, and sexagenary pillars. `qimen-core` owns only Qimen domain mappings and chart facts, consuming an immutable `time-core` context. Third-party calendar output is wrapped and pinned; Qimen availability remains `unverified` until manually checked golden charts pass palace by palace.
+**Architecture:** `time-core` owns timezone resolution, shichen boundaries, solar terms, lunar dates, and sexagenary pillars. `qimen-core` owns only Qimen domain mappings and chart facts, consuming an immutable `time-core` context. A separate verification gate checks independent derivations and chart invariants before analysis, while versioned profile snapshots and precomputed caches keep repeated reads fast. Third-party calendar output is wrapped and pinned; Qimen availability remains `unverified` until manually checked golden charts pass palace by palace.
 
 **Tech Stack:** TypeScript 5.9, Vitest 3, Zod 4, `@js-temporal/polyfill` 0.5.1, `tyme4ts` 1.5.2, npm workspaces.
 
@@ -317,7 +317,102 @@ git add tests/fixtures/qimen-golden tests/qimen-golden-gate.test.ts docs/rules/c
 git commit -m "test: gate qimen calculation on verified charts"
 ```
 
-### Task 8: Verify the complete foundation
+### Task 8: Define profile snapshots, verification reports, and cache identities
+
+**Files:**
+- Create: `packages/contracts/src/profile.ts`
+- Create: `packages/contracts/src/verification.ts`
+- Create: `packages/contracts/src/cache.ts`
+- Modify: `packages/contracts/src/index.ts`
+- Test: `packages/contracts/test/profile-verification.test.ts`
+
+**Step 1: Write failing contract tests**
+
+Require immutable profile versions, explicit input precision, calculation version bundles, one of the four verification statuses, structured check results, result hashes, valid periods, and cache identities. Reject a display payload unless its verification status is `verified`.
+
+**Step 2: Run and confirm RED**
+
+Run: `npm test -- --run packages/contracts/test/profile-verification.test.ts`
+
+Expected: FAIL because the contracts do not exist.
+
+**Step 3: Implement strict Zod contracts**
+
+Keep billing and profile-count entitlements outside these contracts. The same verification schema applies to every profile and product tier.
+
+**Step 4: Verify**
+
+Run: `npm test -- --run packages/contracts/test/profile-verification.test.ts && npm run typecheck`
+
+Expected: PASS.
+
+**Step 5: Commit**
+
+```bash
+git add packages/contracts
+git commit -m "feat: define verified calculation identities"
+```
+
+### Task 9: Add the runtime chart verification gate
+
+**Files:**
+- Create: `packages/qimen-core/src/verifier.ts`
+- Modify: `packages/qimen-core/src/index.ts`
+- Test: `packages/qimen-core/test/verifier.test.ts`
+- Test: `tests/e2e/verified-chart-flow.test.ts`
+
+**Step 1: Write failing invariant tests**
+
+Cover duplicate or missing palace elements, mismatched chief star/gate positions, wrong dun/ju metadata, unsupported source versions, boundary escalation, and a fully valid chart. Prove that blocked and unverified reports never reach the presenter.
+
+**Step 2: Run and confirm RED**
+
+Run: `npm test -- --run packages/qimen-core/test/verifier.test.ts tests/e2e/verified-chart-flow.test.ts`
+
+Expected: FAIL because the verifier is missing.
+
+**Step 3: Implement the independent verifier**
+
+The verifier may consume chart output and immutable rule tables but must not call the chart builder's orchestration function. Return individual check IDs, status, source and algorithm versions, chart hash, and duration.
+
+**Step 4: Add the presentation gate**
+
+Only `verified` charts may produce favorable, caution, direction, or action fields. Other statuses produce a structured waiting, review, unsupported, or error result without divination text.
+
+**Step 5: Verify and commit**
+
+Run: `npm test -- --run packages/qimen-core/test tests/e2e/verified-chart-flow.test.ts && npm run typecheck`
+
+```bash
+git add packages/qimen-core packages/control-plane tests/e2e
+git commit -m "feat: verify charts before analysis"
+```
+
+### Task 10: Add deterministic precomputation and cache keys
+
+**Files:**
+- Create: `packages/control-plane/src/calculation-cache.ts`
+- Modify: `packages/control-plane/src/index.ts`
+- Test: `packages/control-plane/test/calculation-cache.test.ts`
+
+**Step 1: Write failing cache tests**
+
+Prove that identical profile, period, place and version bundles reuse a verified result; changing any version invalidates the key; unverified results are never served as current verified output; and the next twelve shichen can be scheduled without duplicate work.
+
+**Step 2: Implement the minimal cache identity and scheduler**
+
+Keep storage behind an interface. The first implementation may be in-memory; persistence and device synchronization come later without changing cache identity rules.
+
+**Step 3: Verify and commit**
+
+Run: `npm test -- --run packages/control-plane/test/calculation-cache.test.ts && npm run typecheck`
+
+```bash
+git add packages/control-plane
+git commit -m "feat: cache verified calculation periods"
+```
+
+### Task 11: Verify the complete foundation
 
 **Files:**
 - Modify: `README.md`
@@ -349,4 +444,3 @@ git commit -m "docs: report time core verification status"
 **Step 4: Review before integration**
 
 Use `superpowers:requesting-code-review`, fix material findings, rerun the complete verification, then merge the feature branch only after review is clean.
-
