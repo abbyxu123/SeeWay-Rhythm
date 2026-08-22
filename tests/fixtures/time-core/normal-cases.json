@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "time-golden-v1",
+  "cases": [
+    {
+      "id": "zhang-1997-03-19-2115",
+      "input": {
+        "localDateTime": "1997-03-19T21:15",
+        "timeZone": "Asia/Shanghai",
+        "precision": "minute"
+      },
+      "expected": {
+        "pillars": {
+          "year": "丁丑",
+          "month": "癸卯",
+          "day": "庚申",
+          "hour": "丁亥"
+        }
+      },
+      "sourceId": "zhang-course-notes",
+      "sourceClassification": "user_provided_reference",
+      "sourceIndependence": "independent",
+      "sourceName": "河北周易研究会奇门遁甲高级班笔记",
+      "sourceLocator": "reference materials/张志春课程/河北周易研究会奇门遁甲高级班笔记.pdf，PDF第2页",
+      "sourceArtifactSha256": "4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "原文明确列出时间与四柱；本案例只验证来源直接覆盖的四柱事实。"
+    },
+    {
+      "id": "zhang-2001-09-01-1800",
+      "input": {
+        "localDateTime": "2001-09-01T18:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "minute"
+      },
+      "expected": {
+        "pillars": {
+          "year": "辛巳",
+          "month": "丙申",
+          "day": "丁卯",
+          "hour": "己酉"
+        }
+      },
+      "sourceId": "zhang-course-notes",
+      "sourceClassification": "user_provided_reference",
+      "sourceIndependence": "independent",
+      "sourceName": "河北周易研究会奇门遁甲高级班笔记",
+      "sourceLocator": "reference materials/张志春课程/河北周易研究会奇门遁甲高级班笔记.pdf，PDF第3页",
+      "sourceArtifactSha256": "4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "原文明确列出时间与四柱；本案例只验证来源直接覆盖的四柱事实。"
+    },
+    {
+      "id": "zhang-2001-06-11-1320",
+      "input": {
+        "localDateTime": "2001-06-11T13:20",
+        "timeZone": "Asia/Shanghai",
+        "precision": "minute"
+      },
+      "expected": {
+        "pillars": {
+          "year": "辛巳",
+          "month": "甲午",
+          "day": "乙巳",
+          "hour": "癸未"
+        }
+      },
+      "sourceId": "zhang-course-notes",
+      "sourceClassification": "user_provided_reference",
+      "sourceIndependence": "independent",
+      "sourceName": "河北周易研究会奇门遁甲高级班笔记",
+      "sourceLocator": "reference materials/张志春课程/河北周易研究会奇门遁甲高级班笔记.pdf，PDF第4页",
+      "sourceArtifactSha256": "4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "原文明确列出时间与四柱；本案例只验证来源直接覆盖的四柱事实。"
+    },
+    {
+      "id": "zhang-2002-08-16-1200",
+      "input": {
+        "localDateTime": "2002-08-16T12:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "minute"
+      },
+      "expected": {
+        "pillars": {
+          "year": "壬午",
+          "month": "戊申",
+          "day": "丙辰",
+          "hour": "甲午"
+        }
+      },
+      "sourceId": "zhang-course-notes",
+      "sourceClassification": "user_provided_reference",
+      "sourceIndependence": "independent",
+      "sourceName": "河北周易研究会奇门遁甲高级班笔记",
+      "sourceLocator": "reference materials/张志春课程/河北周易研究会奇门遁甲高级班笔记.pdf，PDF第5页",
+      "sourceArtifactSha256": "4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "原文明确列出时间与四柱；本案例只验证来源直接覆盖的四柱事实。"
+    },
+    {
+      "id": "hko-2026-08-21-1154",
+      "input": {
+        "localDateTime": "2026-08-21T11:54:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expected": {
+        "lunar": {
+          "month": 7,
+          "day": 9,
+          "monthName": "七月",
+          "dayName": "初九"
+        },
+        "pillars": {
+          "day": "丁卯"
+        },
+        "solarTerms": {
+          "current": {
+            "name": "立秋"
+          },
+          "next": {
+            "name": "处暑"
+          }
+        }
+      },
+      "sourceId": "hko-almanac",
+      "sourceClassification": "official_publication",
+      "sourceIndependence": "independent",
+      "sourceName": "香港天文台2026年历书及二十四节气资料",
+      "sourceLocator": "https://www.hko.gov.hk/tc/gts/astron2026/files/HKO_almanac_2026.pdf，2026年8月21日；https://www.hko.gov.hk/en/gts/astronomy/Solar_Term.htm",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "历书直接核对农历七月初九与丁卯日；节气表核对立秋、处暑的日期和分钟值。本案例不把提供方的秒级时刻或其他未被来源直接覆盖的字段标为已验证。"
+    }
+  ]
+}

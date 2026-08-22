@@ -1,0 +1,180 @@
+{
+  "schemaVersion": "time-golden-v1",
+  "cases": [
+    {
+      "id": "shichen-2026-08-21-2259-hai",
+      "input": {
+        "localDateTime": "2026-08-21T22:59:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expected": {
+        "shichen": {
+          "branch": "亥"
+        }
+      },
+      "sourceId": "ccdi-shichen-article",
+      "sourceClassification": "official_publication",
+      "sourceIndependence": "independent",
+      "sourceName": "中央纪委国家监委网站十二时辰说明",
+      "sourceLocator": "https://www.ccdi.gov.cn/lswhn/wenhua/wenyuan/201907/t20190719_27179.html，亥时21:00-23:00",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "官方时辰区间直接覆盖22:59属于亥时；不扩展验证日柱或农历边界。"
+    },
+    {
+      "id": "shichen-2026-08-21-2300-zi",
+      "input": {
+        "localDateTime": "2026-08-21T23:00:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expected": {
+        "shichen": {
+          "branch": "子"
+        }
+      },
+      "sourceId": "ccdi-shichen-article",
+      "sourceClassification": "official_publication",
+      "sourceIndependence": "independent",
+      "sourceName": "中央纪委国家监委网站十二时辰说明",
+      "sourceLocator": "https://www.ccdi.gov.cn/lswhn/wenhua/wenyuan/201907/t20190719_27179.html，子时23:00-01:00",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "官方时辰区间直接覆盖23:00切换为子时；不扩展验证日柱或农历边界。"
+    },
+    {
+      "id": "shichen-2026-08-22-0000-zi",
+      "input": {
+        "localDateTime": "2026-08-22T00:00:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expected": {
+        "shichen": {
+          "branch": "子"
+        }
+      },
+      "sourceId": "ccdi-shichen-article",
+      "sourceClassification": "official_publication",
+      "sourceIndependence": "independent",
+      "sourceName": "中央纪委国家监委网站十二时辰说明",
+      "sourceLocator": "https://www.ccdi.gov.cn/lswhn/wenhua/wenyuan/201907/t20190719_27179.html，子时23:00-01:00",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "官方时辰区间直接覆盖00:00仍属于子时；不扩展验证日柱或农历边界。"
+    },
+    {
+      "id": "shichen-2026-08-22-0100-chou",
+      "input": {
+        "localDateTime": "2026-08-22T01:00:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expected": {
+        "shichen": {
+          "branch": "丑"
+        }
+      },
+      "sourceId": "ccdi-shichen-article",
+      "sourceClassification": "official_publication",
+      "sourceIndependence": "independent",
+      "sourceName": "中央纪委国家监委网站十二时辰说明",
+      "sourceLocator": "https://www.ccdi.gov.cn/lswhn/wenhua/wenyuan/201907/t20190719_27179.html，丑时01:00-03:00",
+      "verifier": "SeeWay-Rhythm manual verification",
+      "verificationDate": "2026-08-22",
+      "status": "verified",
+      "notes": "官方时辰区间直接覆盖01:00切换为丑时；不扩展验证日柱或农历边界。"
+    },
+    {
+      "id": "term-liqiu-2026-minus-1-second",
+      "input": {
+        "localDateTime": "2026-08-07T19:42:42",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expected": {
+        "solarTerms": {
+          "current": {
+            "name": "大暑"
+          },
+          "next": {
+            "name": "立秋",
+            "localDateTime": "2026-08-07T19:42:43+08:00[Asia/Shanghai]",
+            "instant": "2026-08-07T11:42:43Z"
+          }
+        }
+      },
+      "sourceId": "tyme4ts",
+      "sourceClassification": "provider_candidate",
+      "sourceIndependence": "provider_only",
+      "sourceName": "香港天文台分钟值旁证与tyme4ts秒级候选值",
+      "sourceLocator": "https://www.hko.gov.hk/tc/gts/astron2026/files/2026SolarTerms24.pdf，立秋2026-08-07 19:43；tyme4ts@1.5.2候选19:42:43",
+      "verifier": "SeeWay-Rhythm boundary review",
+      "verificationDate": "2026-08-22",
+      "status": "boundary_review",
+      "notes": "官方分钟值仅作旁证，秒级未独立核验；该候选案例参与边界回归，但不得进入生产资格集合。"
+    },
+    {
+      "id": "term-liqiu-2026-exact-second",
+      "input": {
+        "localDateTime": "2026-08-07T19:42:43",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expected": {
+        "solarTerms": {
+          "previous": {
+            "name": "大暑"
+          },
+          "current": {
+            "name": "立秋",
+            "localDateTime": "2026-08-07T19:42:43+08:00[Asia/Shanghai]",
+            "instant": "2026-08-07T11:42:43Z"
+          }
+        }
+      },
+      "sourceId": "tyme4ts",
+      "sourceClassification": "provider_candidate",
+      "sourceIndependence": "provider_only",
+      "sourceName": "香港天文台分钟值旁证与tyme4ts秒级候选值",
+      "sourceLocator": "https://www.hko.gov.hk/tc/gts/astron2026/files/2026SolarTerms24.pdf，立秋2026-08-07 19:43；tyme4ts@1.5.2候选19:42:43",
+      "verifier": "SeeWay-Rhythm boundary review",
+      "verificationDate": "2026-08-22",
+      "status": "boundary_review",
+      "notes": "官方分钟值仅作旁证，秒级未独立核验；该候选案例参与边界回归，但不得进入生产资格集合。"
+    },
+    {
+      "id": "term-liqiu-2026-plus-1-second",
+      "input": {
+        "localDateTime": "2026-08-07T19:42:44",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expected": {
+        "solarTerms": {
+          "current": {
+            "name": "立秋",
+            "localDateTime": "2026-08-07T19:42:43+08:00[Asia/Shanghai]",
+            "instant": "2026-08-07T11:42:43Z"
+          },
+          "next": {
+            "name": "处暑"
+          }
+        }
+      },
+      "sourceId": "tyme4ts",
+      "sourceClassification": "provider_candidate",
+      "sourceIndependence": "provider_only",
+      "sourceName": "香港天文台分钟值旁证与tyme4ts秒级候选值",
+      "sourceLocator": "https://www.hko.gov.hk/tc/gts/astron2026/files/2026SolarTerms24.pdf，立秋2026-08-07 19:43；tyme4ts@1.5.2候选19:42:43",
+      "verifier": "SeeWay-Rhythm boundary review",
+      "verificationDate": "2026-08-22",
+      "status": "boundary_review",
+      "notes": "官方分钟值仅作旁证，秒级未独立核验；该候选案例参与边界回归，但不得进入生产资格集合。"
+    }
+  ]
+}
