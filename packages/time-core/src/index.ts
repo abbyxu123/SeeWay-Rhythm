@@ -18,3 +18,19 @@ export type {
   ShichenNext,
   ShichenPeriod,
 } from "./shichen";
+
+export { calendarFactsFor } from "./calendar-provider";
+export type {
+  CalendarFacts,
+  CalendarPillars,
+  CalendarSolarTerms,
+  CalendarTimeZone,
+  CalendarVerificationStatus,
+  DateBoundaryContract,
+  LunarDateFact,
+  SolarTermFact,
+  SolarTermKind,
+} from "./calendar-provider";
+
+export { buildTimeContext } from "./context";
+export type { TimeContext } from "./context";

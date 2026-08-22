@@ -8,6 +8,8 @@
   },
   "types": "./src/index.ts",
   "dependencies": {
-    "@js-temporal/polyfill": "0.5.1"
+    "@js-temporal/polyfill": "0.5.1",
+    "tyme4ts": "1.5.2",
+    "zod": "4.1.5"
   }
 }
