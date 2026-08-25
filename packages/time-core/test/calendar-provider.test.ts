@@ -84,6 +84,30 @@ describe("calendarFactsFor", () => {
     });
   });
 
+  it("pins the reviewed 2026-08-25 hardware display case", () => {
+    const result = calendarFactsFor(resolved("2026-08-25T01:35:40"));
+
+    expect(result.lunar).toMatchObject({
+      year: 2026,
+      month: 7,
+      day: 13,
+      yearName: "农历丙午年",
+      monthName: "七月",
+      dayName: "十三",
+    });
+    expect(result.pillars).toEqual({
+      year: "丙午",
+      month: "丙申",
+      day: "辛未",
+      hour: "己丑",
+    });
+    expect(result.solarTerms.current).toMatchObject({
+      name: "处暑",
+      kind: "qi",
+      localDateTime: "2026-08-23T10:18:49+08:00[Asia/Shanghai]",
+    });
+  });
+
   it("returns only plain deeply frozen project objects", () => {
     const result = calendarFactsFor(resolved("2026-08-21T11:54:00"));
 

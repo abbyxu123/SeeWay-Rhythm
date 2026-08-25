@@ -6,8 +6,12 @@
 - Display: 4.2-inch reflective LCD, 300 x 400 pixels
 - Host observed: macOS over USB Type-C
 - USB identity: Espressif USB JTAG/serial debug unit
-- Serial device at observation time: `/dev/cu.usbmodem2101`
-- Observation date: 2026-08-22 (Asia/Shanghai)
+- Serial observations: `/dev/cu.usbmodem2101` on 2026-08-22 and
+  `/dev/cu.usbmodem101` on 2026-08-24
+- USB serial: Espressif USB-Serial/JTAG
+- Chip: ESP32-S3 QFN56 revision v0.2, MAC `94:a9:90:cd:50:a0`
+- Detected memory: 16 MB QIO Flash and 8 MB embedded PSRAM
+- Observation timezone: Asia/Shanghai
 - Official documentation: https://docs.waveshare.net/ESP32-S3-RLCD-4.2/
 
 The serial device path is assigned by macOS and may change after reconnecting the
@@ -64,14 +68,37 @@ force through the reflective display panel.
 | --- | --- | --- |
 | USB power | Verified | Board powers and screen renders |
 | USB serial enumeration | Verified | Espressif device and macOS serial path detected |
+| ESP32-S3 identity | Verified | `esptool` chip detection and MAC read succeeded |
+| Flash capacity | Verified | `esptool flash-id` detected 16 MB at 3.3 V |
+| Embedded PSRAM | Verified | Chip report detected 8 MB embedded PSRAM |
 | Reflective display | Verified | Factory status page photographed |
 | Temperature/humidity sensor | Detected | Values displayed; calibration not checked |
 | Wi-Fi/BLE radio | Detected | Factory scan counts displayed; connection not tested |
 | KEY/BOOT input | Pending | Short press had no visible effect; long-press test pending |
-| RTC accuracy/retention | Pending | No independent time or backup-cell test |
+| PCF85063 communication | Verified | Address `0x51` responded on GPIO 13/14 and accepted a time write |
+| RTC progression | Verified | RTC advanced across consecutive minute boundaries after host synchronization |
+| RTC accuracy/retention | Pending | Drift and backup-cell retention still require a timed power-off test |
 | Micro SD | Not tested | No card installed |
 | Battery/charging | Pending | Factory percentage is not independent evidence |
 | Microphones/audio output | Pending | No recording or speaker test performed |
+
+## Recovery status
+
+The official Waveshare combined factory image was downloaded before the first
+custom upload and validated with `esptool image-info`:
+
+- Image: `01_Factory_V1.bin`
+- Size: 4,548,144 bytes
+- Target: ESP32-S3, 16 MB, DIO 80 MHz
+- Image checksum and validation hash: valid
+- SHA-256:
+  `d0591315a722d33f4a08931a0341ab840a6c15c56b289d621e8fc18bec8d55a8`
+
+Two attempts to read the entire 16 MB device flash were rejected rather than
+accepted as backups. The 921600 attempt ended with a digest mismatch, and the
+460800 attempt stopped at about 36% with serial corruption. Neither partial
+file was retained. Custom uploads therefore use 460800 or lower, do not enable
+`Erase All Flash`, and retain the separately validated official recovery image.
 
 ## First firmware acceptance test
 
@@ -85,3 +112,27 @@ minimal path before voice or battery work begins:
 4. Log KEY and BOOT single, double, and long presses over USB serial.
 5. Receive one versioned time-context payload and render current/next shichen.
 6. Reboot and confirm the device returns to the default status page.
+
+## Version 0.2 RTC and calendar-header test
+
+On 2026-08-25, firmware v0.2.0 was built and uploaded through
+`/dev/cu.usbmodem101`. Flash writing and hash verification succeeded. Serial
+startup identified the expected 16 MB Flash, 8 MB PSRAM, and PCF85063 RTC.
+
+The RTC initially returned the internally consistent but stale value
+`2026-01-05T21:38:10`. This proved why a responding RTC must not automatically
+be classified as an accurate clock. It was synchronized over USB serial to
+China Standard Time and then observed advancing through consecutive minute
+boundaries while retaining weekday 2 (Tuesday).
+
+The display header now contains Gregorian date, lunar date, solar term, and four
+pillars. The reviewed screen fixture for `2026-08-25T01:35:40+08:00` is:
+
+- Gregorian: `2026-08-25`, Tuesday
+- Lunar: `农历丙午年七月十三`
+- Solar term: `处暑`
+- Pillars: `丙午年 丙申月 辛未日 己丑时`
+
+This fixture pins the current deterministic provider output but does not change
+its independent verification status. Dates without a device payload render
+`待同步`; the firmware does not infer or reuse calendar conclusions.
