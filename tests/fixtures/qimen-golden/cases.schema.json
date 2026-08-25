@@ -1,0 +1,568 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "readOnly": true,
+  "type": "object",
+  "properties": {
+    "fixtureVersion": {
+      "type": "string",
+      "const": "qimen-golden/v1"
+    },
+    "minimumVerifiedCases": {
+      "type": "number",
+      "const": 3
+    },
+    "cases": {
+      "readOnly": true,
+      "minItems": 3,
+      "type": "array",
+      "items": {
+        "readOnly": true,
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "const": "verified"
+          },
+          "input": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "localDateTime": {
+                "type": "string",
+                "minLength": 1
+              },
+              "timeZone": {
+                "type": "string",
+                "const": "Asia/Shanghai"
+              },
+              "precision": {
+                "type": "string",
+                "enum": [
+                  "minute",
+                  "second"
+                ]
+              }
+            },
+            "required": [
+              "localDateTime",
+              "timeZone",
+              "precision"
+            ],
+            "additionalProperties": false
+          },
+          "expectedTime": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "solarTerm": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pillars": {
+                "readOnly": true,
+                "type": "object",
+                "properties": {
+                  "year": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2
+                  },
+                  "month": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2
+                  },
+                  "day": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2
+                  },
+                  "hour": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2
+                  }
+                },
+                "required": [
+                  "year",
+                  "month",
+                  "day",
+                  "hour"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "solarTerm",
+              "pillars"
+            ],
+            "additionalProperties": false
+          },
+          "chart": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "chartVersion": {
+                "type": "string",
+                "const": "qimen-chart/v1"
+              },
+              "algorithmVersion": {
+                "type": "string",
+                "const": "qimen-zhuanpan-chaibu-v1"
+              },
+              "timeContextVersion": {
+                "type": "string",
+                "const": "time-cn-zhang-v1"
+              },
+              "sourceReferences": {
+                "readOnly": true,
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "readOnly": true,
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "title": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "locator": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fingerprint": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "title",
+                    "locator",
+                    "fingerprint"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "dunType": {
+                "type": "string",
+                "enum": [
+                  "阳遁",
+                  "阴遁"
+                ]
+              },
+              "juNumber": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9
+              },
+              "yuan": {
+                "type": "string",
+                "enum": [
+                  "上元",
+                  "中元",
+                  "下元"
+                ]
+              },
+              "xunHead": {
+                "readOnly": true,
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "enum": [
+                      "甲子",
+                      "甲戌",
+                      "甲申",
+                      "甲午",
+                      "甲辰",
+                      "甲寅"
+                    ]
+                  },
+                  "instrument": {
+                    "type": "string",
+                    "enum": [
+                      "戊",
+                      "己",
+                      "庚",
+                      "辛",
+                      "壬",
+                      "癸"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "instrument"
+                ],
+                "additionalProperties": false
+              },
+              "chiefStar": {
+                "type": "string",
+                "enum": [
+                  "天蓬",
+                  "天芮",
+                  "天冲",
+                  "天辅",
+                  "天禽",
+                  "天心",
+                  "天柱",
+                  "天任",
+                  "天英"
+                ]
+              },
+              "chiefGate": {
+                "type": "string",
+                "enum": [
+                  "休门",
+                  "生门",
+                  "伤门",
+                  "杜门",
+                  "景门",
+                  "死门",
+                  "惊门",
+                  "开门"
+                ]
+              },
+              "voidPalaces": {
+                "readOnly": true,
+                "minItems": 1,
+                "maxItems": 2,
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9
+                }
+              },
+              "horsePalace": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "const": 2
+                  },
+                  {
+                    "type": "number",
+                    "const": 4
+                  },
+                  {
+                    "type": "number",
+                    "const": 6
+                  },
+                  {
+                    "type": "number",
+                    "const": 8
+                  }
+                ]
+              },
+              "palaces": {
+                "readOnly": true,
+                "minItems": 9,
+                "maxItems": 9,
+                "type": "array",
+                "items": {
+                  "readOnly": true,
+                  "type": "object",
+                  "properties": {
+                    "fixed": {
+                      "readOnly": true,
+                      "type": "object",
+                      "properties": {
+                        "number": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9
+                        },
+                        "trigram": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "坎",
+                                "坤",
+                                "震",
+                                "巽",
+                                "乾",
+                                "兑",
+                                "艮",
+                                "离"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "direction": {
+                          "type": "string",
+                          "enum": [
+                            "北",
+                            "西南",
+                            "东",
+                            "东南",
+                            "中",
+                            "西北",
+                            "西",
+                            "东北",
+                            "南"
+                          ]
+                        },
+                        "element": {
+                          "type": "string",
+                          "enum": [
+                            "木",
+                            "火",
+                            "土",
+                            "金",
+                            "水"
+                          ]
+                        },
+                        "homeStar": {
+                          "type": "string",
+                          "enum": [
+                            "天蓬",
+                            "天芮",
+                            "天冲",
+                            "天辅",
+                            "天禽",
+                            "天心",
+                            "天柱",
+                            "天任",
+                            "天英"
+                          ]
+                        },
+                        "homeGate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "休门",
+                                "生门",
+                                "伤门",
+                                "杜门",
+                                "景门",
+                                "死门",
+                                "惊门",
+                                "开门"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "number",
+                        "trigram",
+                        "direction",
+                        "element",
+                        "homeStar",
+                        "homeGate"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "earthPlateStem": {
+                      "type": "string",
+                      "enum": [
+                        "乙",
+                        "丙",
+                        "丁",
+                        "戊",
+                        "己",
+                        "庚",
+                        "辛",
+                        "壬",
+                        "癸"
+                      ]
+                    },
+                    "heavenPlate": {
+                      "readOnly": true,
+                      "maxItems": 2,
+                      "type": "array",
+                      "items": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                          "stem": {
+                            "type": "string",
+                            "enum": [
+                              "乙",
+                              "丙",
+                              "丁",
+                              "戊",
+                              "己",
+                              "庚",
+                              "辛",
+                              "壬",
+                              "癸"
+                            ]
+                          },
+                          "star": {
+                            "type": "string",
+                            "enum": [
+                              "天蓬",
+                              "天芮",
+                              "天冲",
+                              "天辅",
+                              "天禽",
+                              "天心",
+                              "天柱",
+                              "天任",
+                              "天英"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "stem",
+                          "star"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "gate": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "休门",
+                            "生门",
+                            "伤门",
+                            "杜门",
+                            "景门",
+                            "死门",
+                            "惊门",
+                            "开门"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "deity": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "值符",
+                            "腾蛇",
+                            "太阴",
+                            "六合",
+                            "白虎",
+                            "玄武",
+                            "九地",
+                            "九天"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "fixed",
+                    "earthPlateStem",
+                    "heavenPlate",
+                    "gate",
+                    "deity"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "chartVersion",
+              "algorithmVersion",
+              "timeContextVersion",
+              "sourceReferences",
+              "dunType",
+              "juNumber",
+              "yuan",
+              "xunHead",
+              "chiefStar",
+              "chiefGate",
+              "voidPalaces",
+              "horsePalace",
+              "palaces"
+            ],
+            "additionalProperties": false
+          },
+          "provenance": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "sourcePath": {
+                "type": "string",
+                "pattern": "^(?!.*\\.\\.)reference materials\\/.+$"
+              },
+              "sourceLocator": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceSha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "verificationMethod": {
+                "type": "string",
+                "const": "two-pass visual transcription plus structural invariant check"
+              },
+              "transcriptionPasses": {
+                "type": "number",
+                "const": 2
+              },
+              "verifiedBy": {
+                "type": "string",
+                "const": "codex-source-review"
+              },
+              "verifiedAt": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "notes": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "sourcePath",
+              "sourceLocator",
+              "sourceSha256",
+              "verificationMethod",
+              "transcriptionPasses",
+              "verifiedBy",
+              "verifiedAt",
+              "notes"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "caseId",
+          "status",
+          "input",
+          "expectedTime",
+          "chart",
+          "provenance"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "fixtureVersion",
+    "minimumVerifiedCases",
+    "cases"
+  ],
+  "additionalProperties": false
+}

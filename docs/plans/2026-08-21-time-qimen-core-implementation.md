@@ -281,39 +281,54 @@ git commit -m "feat: define qimen chart facts"
 
 ### Task 7: Establish the Qimen golden-case gate before chart calculation
 
+**Status:** Completed on 2026-08-26. This opens only calculator development; all Qimen Agents remain `unverified`.
+
 **Files:**
 - Create: `tests/fixtures/qimen-golden/README.md`
 - Create: `tests/fixtures/qimen-golden/cases.schema.json`
-- Create: `tests/fixtures/qimen-golden/draft-cases.json`
+- Create: `tests/fixtures/qimen-golden/verified-cases.json`
+- Create: `tests/fixtures/qimen-golden/rejected-cases.json`
 - Create: `tests/qimen-golden-gate.test.ts`
+- Create: `packages/qimen-core/src/readiness.ts`
+- Create: `packages/qimen-core/src/golden.ts`
+- Modify: `packages/qimen-core/src/index.ts`
+- Create: `scripts/generate-qimen-golden-schema.ts`
+- Create: `scripts/qimen-golden-audit.ts`
+- Create: `scripts/qimen-source-audit.ts`
+- Modify: `package.json`
 - Modify: `docs/rules/conventions.md`
+- Create: `docs/rules/source-catalog.md`
+- Test: `tests/qimen-source-audit.test.ts`
+- Test: `tests/qimen-golden-audit.test.ts`
 
 **Step 1: Define palace-by-palace fixture structure**
 
 Each case must store the time-context version, Qimen version, source locator, dun, ju, yuan, chief star, chief gate, all nine palace facts, void, horse, verifier, verification date, and status.
 
-**Step 2: Add draft cases from the supplied Zhang Zhichun materials**
+**Step 2: Add verified cases from the supplied Zhang Zhichun materials**
 
-Draft extraction is allowed, but draft cases cannot execute a production calculator. Record uncertain characters or page readings explicitly.
+Transcribe each case twice, validate all nine palaces with `QimenChartSchema`, and independently rebuild its time context. Record unresolved source discrepancies separately so they cannot change expected results.
 
 **Step 3: Write a failing gate test**
 
 The gate must prove that no Qimen Agent can become `available` while there are zero palace-complete verified cases.
 
-**Step 4: Implement the gate and keep Agents unsupported**
+**Step 4: Implement the audited development gate and keep Agents unsupported**
 
-Update the convention table to mark the selected school as locked while leaving calculation items pending evidence.
+Name the in-package predicate `structure readiness`: it requires at least three palace-complete cases covering both Yin and Yang Dun, distinct evidence and palace arrangements, and three distinct Dun/Ju combinations. The complete local gate must additionally rebuild each time context and hash the actual private source PDFs. Update the convention and source tables while leaving calculator availability pending.
 
 **Step 5: Verify**
 
-Run: `npm test -- --run tests/qimen-golden-gate.test.ts packages/control-plane/test/registry.test.ts`
+Run: `npm test -- --run tests/qimen-golden-gate.test.ts tests/qimen-golden-audit.test.ts tests/qimen-source-audit.test.ts packages/control-plane/test/registry.test.ts`
+
+Run on the source-holding machine: `npm run audit:qimen-golden -- /absolute/path/to/SeeWay-Rhythm`
 
 Expected: PASS, with Qimen still `unverified`.
 
 **Step 6: Commit**
 
 ```bash
-git add tests/fixtures/qimen-golden tests/qimen-golden-gate.test.ts docs/rules/conventions.md
+git add package.json packages/qimen-core scripts tests/fixtures/qimen-golden tests/qimen-golden-gate.test.ts tests/qimen-golden-audit.test.ts tests/qimen-source-audit.test.ts docs/rules
 git commit -m "test: gate qimen calculation on verified charts"
 ```
 
@@ -355,10 +370,14 @@ git commit -m "feat: define verified calculation identities"
 
 ### Task 9: Add the runtime chart verification gate
 
+**Prerequisite:** Complete a dedicated, reviewed calculator plan for dun/yuan/ju, earth plate, xun head, void/horse, chief star/gate, heaven plate, stars, gates and deities. Task 9 must not be started against a placeholder chart builder.
+
 **Files:**
 - Create: `packages/qimen-core/src/verifier.ts`
 - Modify: `packages/qimen-core/src/index.ts`
+- Create: `packages/control-plane/src/qimen-availability.ts`
 - Test: `packages/qimen-core/test/verifier.test.ts`
+- Test: `packages/control-plane/test/qimen-availability.test.ts`
 - Test: `tests/e2e/verified-chart-flow.test.ts`
 
 **Step 1: Write failing invariant tests**
@@ -378,6 +397,8 @@ The verifier may consume chart output and immutable rule tables but must not cal
 **Step 4: Add the presentation gate**
 
 Only `verified` charts may produce favorable, caution, direction, or action fields. Other statuses produce a structured waiting, review, unsupported, or error result without divination text.
+
+Create one availability predicate that requires the golden-case gate, deterministic calculator suite and independent runtime verifier together. Agent Registry must consume this predicate rather than maintain a separate hard-coded status.
 
 **Step 5: Verify and commit**
 

@@ -7,6 +7,9 @@
     "apps/*"
   ],
   "scripts": {
+    "audit:qimen-golden": "vite-node --script scripts/qimen-golden-audit.ts",
+    "audit:qimen-sources": "vite-node --script scripts/qimen-source-audit.ts",
+    "generate:qimen-golden-schema": "vite-node scripts/generate-qimen-golden-schema.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.base.json"

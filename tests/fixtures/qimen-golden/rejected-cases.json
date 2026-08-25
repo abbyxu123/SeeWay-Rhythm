@@ -1,0 +1,25 @@
+{
+  "fixtureVersion": "qimen-golden-rejected/v1",
+  "cases": [
+    {
+      "caseId": "course-2001-09-01-yin-9-unresolved",
+      "status": "rejected_pending_review",
+      "input": {
+        "localDateTime": "2001-09-01T18:00:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "sourceClaim": {
+        "solarTerm": "处暑",
+        "dunType": "阴遁",
+        "juNumber": 9
+      },
+      "provenance": {
+        "sourcePath": "reference materials/张志春课程/河北周易研究会奇门遁甲高级班笔记.pdf",
+        "sourceLocator": "PDF第3页，例二",
+        "sourceSha256": "4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47"
+      },
+      "reason": "按当前拆补三元口径，该日期与处暑上元不能直接得到阴遁九局；源图地盘本身又呈阴遁九局。差异未解释前禁止作为黄金案例或反向修改算法。"
+    }
+  ]
+}

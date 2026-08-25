@@ -1,0 +1,357 @@
+{
+  "fixtureVersion": "qimen-golden/v1",
+  "minimumVerifiedCases": 3,
+  "cases": [
+    {
+      "caseId": "zhang-1997-03-19-yang-4",
+      "status": "verified",
+      "input": {
+        "localDateTime": "1997-03-19T21:15:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expectedTime": {
+        "solarTerm": "惊蛰",
+        "pillars": {
+          "year": "丁丑",
+          "month": "癸卯",
+          "day": "庚申",
+          "hour": "丁亥"
+        }
+      },
+      "chart": {
+        "chartVersion": "qimen-chart/v1",
+        "algorithmVersion": "qimen-zhuanpan-chaibu-v1",
+        "timeContextVersion": "time-cn-zhang-v1",
+        "sourceReferences": [
+          {
+            "sourceId": "zhang-advanced-course-notes",
+            "title": "河北周易研究会奇门遁甲高级班笔记",
+            "locator": "PDF第2页，例一",
+            "fingerprint": "sha256:4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47"
+          }
+        ],
+        "dunType": "阳遁",
+        "juNumber": 4,
+        "yuan": "下元",
+        "xunHead": { "name": "甲申", "instrument": "庚" },
+        "chiefStar": "天心",
+        "chiefGate": "开门",
+        "voidPalaces": [2, 9],
+        "horsePalace": 4,
+        "palaces": [
+          {
+            "fixed": { "number": 1, "trigram": "坎", "direction": "北", "element": "水", "homeStar": "天蓬", "homeGate": "休门" },
+            "earthPlateStem": "丁",
+            "heavenPlate": [{ "stem": "庚", "star": "天心" }],
+            "gate": "杜门",
+            "deity": "值符"
+          },
+          {
+            "fixed": { "number": 2, "trigram": "坤", "direction": "西南", "element": "土", "homeStar": "天芮", "homeGate": "死门" },
+            "earthPlateStem": "丙",
+            "heavenPlate": [{ "stem": "癸", "star": "天英" }],
+            "gate": "休门",
+            "deity": "玄武"
+          },
+          {
+            "fixed": { "number": 3, "trigram": "震", "direction": "东", "element": "木", "homeStar": "天冲", "homeGate": "伤门" },
+            "earthPlateStem": "乙",
+            "heavenPlate": [{ "stem": "壬", "star": "天任" }],
+            "gate": "死门",
+            "deity": "太阴"
+          },
+          {
+            "fixed": { "number": 4, "trigram": "巽", "direction": "东南", "element": "木", "homeStar": "天辅", "homeGate": "杜门" },
+            "earthPlateStem": "戊",
+            "heavenPlate": [{ "stem": "乙", "star": "天冲" }],
+            "gate": "惊门",
+            "deity": "六合"
+          },
+          {
+            "fixed": { "number": 5, "trigram": null, "direction": "中", "element": "土", "homeStar": "天禽", "homeGate": null },
+            "earthPlateStem": "己",
+            "heavenPlate": [],
+            "gate": null,
+            "deity": null
+          },
+          {
+            "fixed": { "number": 6, "trigram": "乾", "direction": "西北", "element": "金", "homeStar": "天心", "homeGate": "开门" },
+            "earthPlateStem": "庚",
+            "heavenPlate": [{ "stem": "辛", "star": "天柱" }],
+            "gate": "伤门",
+            "deity": "九天"
+          },
+          {
+            "fixed": { "number": 7, "trigram": "兑", "direction": "西", "element": "金", "homeStar": "天柱", "homeGate": "惊门" },
+            "earthPlateStem": "辛",
+            "heavenPlate": [
+              { "stem": "己", "star": "天禽" },
+              { "stem": "丙", "star": "天芮" }
+            ],
+            "gate": "生门",
+            "deity": "九地"
+          },
+          {
+            "fixed": { "number": 8, "trigram": "艮", "direction": "东北", "element": "土", "homeStar": "天任", "homeGate": "生门" },
+            "earthPlateStem": "壬",
+            "heavenPlate": [{ "stem": "丁", "star": "天蓬" }],
+            "gate": "景门",
+            "deity": "腾蛇"
+          },
+          {
+            "fixed": { "number": 9, "trigram": "离", "direction": "南", "element": "火", "homeStar": "天英", "homeGate": "景门" },
+            "earthPlateStem": "癸",
+            "heavenPlate": [{ "stem": "戊", "star": "天辅" }],
+            "gate": "开门",
+            "deity": "白虎"
+          }
+        ]
+      },
+      "provenance": {
+        "sourcePath": "reference materials/张志春课程/河北周易研究会奇门遁甲高级班笔记.pdf",
+        "sourceLocator": "PDF第2页，例一",
+        "sourceSha256": "4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47",
+        "verificationMethod": "two-pass visual transcription plus structural invariant check",
+        "transcriptionPasses": 2,
+        "verifiedBy": "codex-source-review",
+        "verifiedAt": "2026-08-25",
+        "notes": "逐宫核对九星、八门、八神、地盘干、天盘干、天禽寄宫、午未空和马星；与惊蛰下元阳遁四局一致。"
+      }
+    },
+    {
+      "caseId": "zhang-2001-06-11-yang-9",
+      "status": "verified",
+      "input": {
+        "localDateTime": "2001-06-11T13:20:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expectedTime": {
+        "solarTerm": "芒种",
+        "pillars": {
+          "year": "辛巳",
+          "month": "甲午",
+          "day": "乙巳",
+          "hour": "癸未"
+        }
+      },
+      "chart": {
+        "chartVersion": "qimen-chart/v1",
+        "algorithmVersion": "qimen-zhuanpan-chaibu-v1",
+        "timeContextVersion": "time-cn-zhang-v1",
+        "sourceReferences": [
+          {
+            "sourceId": "zhang-advanced-course-notes",
+            "title": "河北周易研究会奇门遁甲高级班笔记",
+            "locator": "PDF第4至5页，例三",
+            "fingerprint": "sha256:4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47"
+          }
+        ],
+        "dunType": "阳遁",
+        "juNumber": 9,
+        "yuan": "下元",
+        "xunHead": { "name": "甲戌", "instrument": "己" },
+        "chiefStar": "天蓬",
+        "chiefGate": "休门",
+        "voidPalaces": [2, 7],
+        "horsePalace": 4,
+        "palaces": [
+          {
+            "fixed": { "number": 1, "trigram": "坎", "direction": "北", "element": "水", "homeStar": "天蓬", "homeGate": "休门" },
+            "earthPlateStem": "己",
+            "heavenPlate": [{ "stem": "壬", "star": "天辅" }],
+            "gate": "休门",
+            "deity": "六合"
+          },
+          {
+            "fixed": { "number": 2, "trigram": "坤", "direction": "西南", "element": "土", "homeStar": "天芮", "homeGate": "死门" },
+            "earthPlateStem": "庚",
+            "heavenPlate": [{ "stem": "己", "star": "天蓬" }],
+            "gate": "死门",
+            "deity": "值符"
+          },
+          {
+            "fixed": { "number": 3, "trigram": "震", "direction": "东", "element": "木", "homeStar": "天冲", "homeGate": "伤门" },
+            "earthPlateStem": "辛",
+            "heavenPlate": [
+              { "stem": "癸", "star": "天禽" },
+              { "stem": "庚", "star": "天芮" }
+            ],
+            "gate": "伤门",
+            "deity": "玄武"
+          },
+          {
+            "fixed": { "number": 4, "trigram": "巽", "direction": "东南", "element": "木", "homeStar": "天辅", "homeGate": "杜门" },
+            "earthPlateStem": "壬",
+            "heavenPlate": [{ "stem": "丙", "star": "天柱" }],
+            "gate": "杜门",
+            "deity": "九地"
+          },
+          {
+            "fixed": { "number": 5, "trigram": null, "direction": "中", "element": "土", "homeStar": "天禽", "homeGate": null },
+            "earthPlateStem": "癸",
+            "heavenPlate": [],
+            "gate": null,
+            "deity": null
+          },
+          {
+            "fixed": { "number": 6, "trigram": "乾", "direction": "西北", "element": "金", "homeStar": "天心", "homeGate": "开门" },
+            "earthPlateStem": "丁",
+            "heavenPlate": [{ "stem": "辛", "star": "天冲" }],
+            "gate": "开门",
+            "deity": "太阴"
+          },
+          {
+            "fixed": { "number": 7, "trigram": "兑", "direction": "西", "element": "金", "homeStar": "天柱", "homeGate": "惊门" },
+            "earthPlateStem": "丙",
+            "heavenPlate": [{ "stem": "乙", "star": "天任" }],
+            "gate": "惊门",
+            "deity": "腾蛇"
+          },
+          {
+            "fixed": { "number": 8, "trigram": "艮", "direction": "东北", "element": "土", "homeStar": "天任", "homeGate": "生门" },
+            "earthPlateStem": "乙",
+            "heavenPlate": [{ "stem": "戊", "star": "天英" }],
+            "gate": "生门",
+            "deity": "白虎"
+          },
+          {
+            "fixed": { "number": 9, "trigram": "离", "direction": "南", "element": "火", "homeStar": "天英", "homeGate": "景门" },
+            "earthPlateStem": "戊",
+            "heavenPlate": [{ "stem": "丁", "star": "天心" }],
+            "gate": "景门",
+            "deity": "九天"
+          }
+        ]
+      },
+      "provenance": {
+        "sourcePath": "reference materials/张志春课程/河北周易研究会奇门遁甲高级班笔记.pdf",
+        "sourceLocator": "PDF第4至5页，例三",
+        "sourceSha256": "4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47",
+        "verificationMethod": "two-pass visual transcription plus structural invariant check",
+        "transcriptionPasses": 2,
+        "verifiedBy": "codex-source-review",
+        "verifiedAt": "2026-08-25",
+        "notes": "逐宫核对九星、八门、八神、地盘干、天盘干、天禽寄宫、申酉空和马星；与芒种下元阳遁九局一致。"
+      }
+    },
+    {
+      "caseId": "zhang-2002-08-16-yin-5",
+      "status": "verified",
+      "input": {
+        "localDateTime": "2002-08-16T12:00:00",
+        "timeZone": "Asia/Shanghai",
+        "precision": "second"
+      },
+      "expectedTime": {
+        "solarTerm": "立秋",
+        "pillars": {
+          "year": "壬午",
+          "month": "戊申",
+          "day": "丙辰",
+          "hour": "甲午"
+        }
+      },
+      "chart": {
+        "chartVersion": "qimen-chart/v1",
+        "algorithmVersion": "qimen-zhuanpan-chaibu-v1",
+        "timeContextVersion": "time-cn-zhang-v1",
+        "sourceReferences": [
+          {
+            "sourceId": "zhang-advanced-course-notes",
+            "title": "河北周易研究会奇门遁甲高级班笔记",
+            "locator": "PDF第5页，例四",
+            "fingerprint": "sha256:4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47"
+          }
+        ],
+        "dunType": "阴遁",
+        "juNumber": 5,
+        "yuan": "中元",
+        "xunHead": { "name": "甲午", "instrument": "辛" },
+        "chiefStar": "天芮",
+        "chiefGate": "死门",
+        "voidPalaces": [4],
+        "horsePalace": 2,
+        "palaces": [
+          {
+            "fixed": { "number": 1, "trigram": "坎", "direction": "北", "element": "水", "homeStar": "天蓬", "homeGate": "休门" },
+            "earthPlateStem": "壬",
+            "heavenPlate": [{ "stem": "壬", "star": "天蓬" }],
+            "gate": "休门",
+            "deity": "玄武"
+          },
+          {
+            "fixed": { "number": 2, "trigram": "坤", "direction": "西南", "element": "土", "homeStar": "天芮", "homeGate": "死门" },
+            "earthPlateStem": "辛",
+            "heavenPlate": [
+              { "stem": "戊", "star": "天禽" },
+              { "stem": "辛", "star": "天芮" }
+            ],
+            "gate": "死门",
+            "deity": "值符"
+          },
+          {
+            "fixed": { "number": 3, "trigram": "震", "direction": "东", "element": "木", "homeStar": "天冲", "homeGate": "伤门" },
+            "earthPlateStem": "庚",
+            "heavenPlate": [{ "stem": "庚", "star": "天冲" }],
+            "gate": "伤门",
+            "deity": "六合"
+          },
+          {
+            "fixed": { "number": 4, "trigram": "巽", "direction": "东南", "element": "木", "homeStar": "天辅", "homeGate": "杜门" },
+            "earthPlateStem": "己",
+            "heavenPlate": [{ "stem": "己", "star": "天辅" }],
+            "gate": "杜门",
+            "deity": "太阴"
+          },
+          {
+            "fixed": { "number": 5, "trigram": null, "direction": "中", "element": "土", "homeStar": "天禽", "homeGate": null },
+            "earthPlateStem": "戊",
+            "heavenPlate": [],
+            "gate": null,
+            "deity": null
+          },
+          {
+            "fixed": { "number": 6, "trigram": "乾", "direction": "西北", "element": "金", "homeStar": "天心", "homeGate": "开门" },
+            "earthPlateStem": "乙",
+            "heavenPlate": [{ "stem": "乙", "star": "天心" }],
+            "gate": "开门",
+            "deity": "九地"
+          },
+          {
+            "fixed": { "number": 7, "trigram": "兑", "direction": "西", "element": "金", "homeStar": "天柱", "homeGate": "惊门" },
+            "earthPlateStem": "丙",
+            "heavenPlate": [{ "stem": "丙", "star": "天柱" }],
+            "gate": "惊门",
+            "deity": "九天"
+          },
+          {
+            "fixed": { "number": 8, "trigram": "艮", "direction": "东北", "element": "土", "homeStar": "天任", "homeGate": "生门" },
+            "earthPlateStem": "丁",
+            "heavenPlate": [{ "stem": "丁", "star": "天任" }],
+            "gate": "生门",
+            "deity": "白虎"
+          },
+          {
+            "fixed": { "number": 9, "trigram": "离", "direction": "南", "element": "火", "homeStar": "天英", "homeGate": "景门" },
+            "earthPlateStem": "癸",
+            "heavenPlate": [{ "stem": "癸", "star": "天英" }],
+            "gate": "景门",
+            "deity": "腾蛇"
+          }
+        ]
+      },
+      "provenance": {
+        "sourcePath": "reference materials/张志春课程/河北周易研究会奇门遁甲高级班笔记.pdf",
+        "sourceLocator": "PDF第5页，例四",
+        "sourceSha256": "4ee9788e2fcc577a66c5aef83a50f353b01e2dec50915fa799c8b7473fecbc47",
+        "verificationMethod": "two-pass visual transcription plus structural invariant check",
+        "transcriptionPasses": 2,
+        "verifiedBy": "codex-source-review",
+        "verifiedAt": "2026-08-25",
+        "notes": "逐宫核对伏吟盘、九星、八门、八神、地盘干、天盘干、天禽寄宫、辰巳空和马星；与立秋中元阴遁五局一致。"
+      }
+    }
+  ]
+}
