@@ -32,5 +32,5 @@ export type {
   SolarTermKind,
 } from "./calendar-provider";
 
-export { buildTimeContext } from "./context";
+export { TimeContextSchema, buildTimeContext } from "./context";
 export type { TimeContext } from "./context";

@@ -67,3 +67,22 @@ export type {
   QimenGoldenReadinessCase,
   QimenGoldenStructureReadiness,
 } from "./readiness";
+
+export {
+  QIMEN_BUREAU_TABLE,
+  QIMEN_BUREAU_VERSION,
+  QIMEN_DUN_TYPES,
+  QIMEN_YUANS,
+  QimenBureauFactSchema,
+  QimenYuanFactSchema,
+  determineQimenBureau,
+  yuanForDayPillar,
+} from "./bureau";
+export type {
+  QimenBureauFact,
+  QimenBureauTableEntry,
+  QimenDunType,
+  QimenSolarTerm,
+  QimenYuan,
+  QimenYuanFact,
+} from "./bureau";
