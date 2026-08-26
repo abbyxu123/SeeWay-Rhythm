@@ -86,3 +86,14 @@ export type {
   QimenYuan,
   QimenYuanFact,
 } from "./bureau";
+
+export {
+  EARTH_PLATE_SEQUENCE,
+  EarthPlateEntrySchema,
+  EarthPlateSchema,
+  buildEarthPlate,
+} from "./earth-plate";
+export type {
+  EarthPlate,
+  EarthPlateEntry,
+} from "./earth-plate";
