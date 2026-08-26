@@ -97,3 +97,10 @@ export type {
   EarthPlate,
   EarthPlateEntry,
 } from "./earth-plate";
+
+export {
+  QIMEN_HOUR_FACTS_VERSION,
+  QimenHourFactsSchema,
+  calculateQimenHourFacts,
+} from "./hour-facts";
+export type { QimenHourFacts } from "./hour-facts";
