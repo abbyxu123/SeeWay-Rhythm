@@ -4,6 +4,7 @@ import type {
   MemoryScope,
   ProfileScope,
 } from "@seeway/contracts";
+import { evaluateQimenAvailability } from "./qimen-availability";
 
 export type AgentRole = "orchestrator" | "domain";
 export type AgentAvailability = "available" | "unverified";
@@ -161,9 +162,30 @@ function freezeDefinition(definition: AgentDefinition): AgentDefinition {
   });
 }
 
-export const agentRegistry: readonly AgentDefinition[] = Object.freeze(
-  agentOrder.map((agentId) => freezeDefinition(definitionsById[agentId])),
-);
+export function createAgentRegistry(
+  qimenAttestation?: unknown,
+): readonly AgentDefinition[] {
+  const qimenAvailability =
+    evaluateQimenAvailability(qimenAttestation).availability;
+
+  return Object.freeze(
+    agentOrder.map((agentId) => {
+      const definition = definitionsById[agentId];
+      if (
+        definition.role === "domain" &&
+        definition.calculationCore === "qimen-core"
+      ) {
+        return freezeDefinition({
+          ...definition,
+          availability: qimenAvailability,
+        });
+      }
+      return freezeDefinition(definition);
+    }),
+  );
+}
+
+export const agentRegistry: readonly AgentDefinition[] = createAgentRegistry();
 
 export function getAgentDefinition(
   agentId: string,

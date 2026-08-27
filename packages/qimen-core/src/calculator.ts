@@ -24,6 +24,8 @@ import {
   rotateHeavenPlate,
 } from "./rotation";
 
+const AUTHENTIC_CALCULATED_CHARTS = new WeakSet<object>();
+
 export function calculateQimenChart(
   timeContext: TimeContext,
   sourceReference: QimenSourceReference,
@@ -73,7 +75,7 @@ export function calculateQimenChart(
     deities.map(({ palaceNumber, deity }) => [palaceNumber, deity]),
   );
 
-  return QimenChartSchema.parse({
+  const chart = QimenChartSchema.parse({
     chartVersion: QIMEN_CHART_VERSION,
     algorithmVersion: QIMEN_ALGORITHM_VERSION,
     timeContextVersion: TIME_CONTEXT_CONVENTION_VERSION,
@@ -94,4 +96,17 @@ export function calculateQimenChart(
       deity: deityByPalace.get(fixed.number),
     })),
   });
+  AUTHENTIC_CALCULATED_CHARTS.add(chart);
+  return chart;
+}
+
+export function isAuthenticCalculatedQimenChart(
+  candidate: unknown,
+): candidate is QimenChart {
+  return (
+    typeof candidate === "object" &&
+    candidate !== null &&
+    AUTHENTIC_CALCULATED_CHARTS.has(candidate) &&
+    QimenChartSchema.safeParse(candidate).success
+  );
 }

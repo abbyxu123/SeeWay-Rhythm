@@ -105,4 +105,19 @@ export {
 } from "./hour-facts";
 export type { QimenHourFacts } from "./hour-facts";
 
-export { calculateQimenChart } from "./calculator";
+export {
+  calculateQimenChart,
+  isAuthenticCalculatedQimenChart,
+} from "./calculator";
+
+export {
+  QIMEN_VERIFIER_VERSION,
+  QimenVerificationIssueSchema,
+  QimenVerificationResultSchema,
+  isAuthenticQimenVerificationResult,
+  verifyQimenChart,
+} from "./verifier";
+export type {
+  QimenVerificationIssue,
+  QimenVerificationResult,
+} from "./verifier";

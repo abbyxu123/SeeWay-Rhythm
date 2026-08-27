@@ -1,6 +1,7 @@
 import {
   QimenChartSchema,
   calculateQimenChart,
+  isAuthenticCalculatedQimenChart,
 } from "@seeway/qimen-core";
 import {
   buildTimeContext,
@@ -41,6 +42,8 @@ describe("complete Qimen chart calculator", () => {
     expect(chart.sourceReferences.every(Object.isFrozen)).toBe(true);
     expect(Object.isFrozen(chart.palaces)).toBe(true);
     expect(chart.palaces.every(Object.isFrozen)).toBe(true);
+    expect(isAuthenticCalculatedQimenChart(chart)).toBe(true);
+    expect(isAuthenticCalculatedQimenChart(structuredClone(chart))).toBe(false);
     expect(
       chart.palaces.every(({ fixed, heavenPlate }) =>
         Object.isFrozen(fixed) && Object.isFrozen(heavenPlate),
