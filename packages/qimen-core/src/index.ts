@@ -104,3 +104,5 @@ export {
   calculateQimenHourFacts,
 } from "./hour-facts";
 export type { QimenHourFacts } from "./hour-facts";
+
+export { calculateQimenChart } from "./calculator";
