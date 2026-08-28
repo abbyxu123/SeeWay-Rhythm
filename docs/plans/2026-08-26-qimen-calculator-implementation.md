@@ -296,9 +296,11 @@ git commit -m "feat: derive cited qimen guidance"
 **Files:**
 - Create: `packages/contracts/src/device.ts`
 - Modify: `packages/contracts/src/index.ts`
-- Create: `firmware/esp32-s3-rlcd-4.2/main/qimen_payload.h`
-- Create: `firmware/esp32-s3-rlcd-4.2/main/qimen_payload.c`
-- Modify: `firmware/esp32-s3-rlcd-4.2/main/main.c`
+- Create: `packages/control-plane/src/device-payload.ts`
+- Create: `scripts/qimen-device-bundle.ts`
+- Create: `firmware/esp32-s3-rlcd-4.2-smoke-test/SeeWay_RLCD42_Smoke/QimenPayload.h`
+- Create: `firmware/esp32-s3-rlcd-4.2-smoke-test/SeeWay_RLCD42_Smoke/QimenPayload.cpp`
+- Modify: `firmware/esp32-s3-rlcd-4.2-smoke-test/SeeWay_RLCD42_Smoke/SeeWay_RLCD42_Smoke.ino`
 - Test: `packages/contracts/test/device.test.ts`
 - Test: `tests/e2e/device-payload.test.ts`
 
@@ -318,7 +320,7 @@ Accept a versioned profile payload from the host/local setup path and persist on
 
 Run: `npm test && npm run typecheck`
 
-Run the ESP-IDF firmware build, flash the connected board, capture serial output and photograph both views. Confirm the board displays no guidance when verification is absent.
+Run the repository's already proven Arduino/U8g2 firmware build, flash the connected board, capture serial output and photograph both views. Confirm the board displays no guidance when verification is absent. The framework choice is intentionally unchanged during hardware integration; payload parsing remains isolated for a later ESP-IDF migration if one becomes necessary.
 
 **Step 5: Commit**
 

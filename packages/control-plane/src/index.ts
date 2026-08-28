@@ -1,4 +1,5 @@
 export * from "./orchestrator";
+export * from "./device-payload";
 export * from "./policy";
 export * from "./presenter";
 export * from "./profile-store";
