@@ -1,8 +1,8 @@
 # ESP32-S3-RLCD-4.2 Device Firmware
 
 Recoverable Arduino/U8g2 firmware for the SeeWay Rhythm 400 x 300 reflective
-display. Version 0.3 renders only versioned Qimen payloads that have passed the
-host calculator and independent verifier.
+display. Version 0.3.1 renders only versioned Qimen payloads that have passed
+the host calculator and independent verifier.
 
 ## Toolchain
 
@@ -37,9 +37,16 @@ the reviewed development board, not a portable assumption.
 
 ## Controls
 
-- KEY short press: current / next shichen.
+- KEY short press: current / next shichen. If the exact next payload is not
+  cached, the verified current screen stays visible and shows a five-second
+  `下一时辰尚未同步` notice.
 - BOOT short press: four-row summary / complete nine-palace chart.
 - PWR: hardware power control; it is not treated as an application key.
+
+Crossing a shichen boundary always returns the selection to the current
+shichen. A preview therefore cannot silently advance to a third, uncached
+period. Verified categories without matching evidence display an explicit
+`暂无明确...` message rather than `--` or invented guidance.
 
 The summary contains `有利`, `注意`, `方位`, and `建议`. The chart view uses
 the Luo Shu screen order `4-9-2 / 3-5-7 / 8-1-6` and shows earth/heaven stems,
@@ -71,10 +78,11 @@ npm run device:bundle -- \
 ```
 
 The transport uses `BEGIN=PROFILE|PAYLOAD`, short `CHUNK=` records and `END` so
-large UTF-8 JSON cannot overrun the USB receive buffer. `STATUS` reports whether
-the profile and both verified slots are present. Diagnostic commands
-`SELECT=CURRENT|NEXT` and `VIEW=SUMMARY|CHART` exercise the same paths as the two
-physical buttons.
+large UTF-8 JSON cannot overrun the USB receive buffer. `STATUS` reports the
+stored profile and slots plus active selection/view, current and next payload
+availability, raw GPIO0/GPIO18 levels, and debounced BOOT/KEY press counts.
+Diagnostic commands `SELECT=CURRENT|NEXT` and `VIEW=SUMMARY|CHART` exercise the
+same paths as the two physical buttons.
 
 The PCF85063 RTC uses address `0x51`, SDA GPIO 13 and SCL GPIO 14. It can be set
 at 115200 baud with `TIME=YYYY-MM-DDTHH:MM:SS`.

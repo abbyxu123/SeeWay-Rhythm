@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <mbedtls/base64.h>
 
+#include "InteractionPolicy.h"
 #include "QimenPayload.h"
 #include "ST7305_U8g2.h"
 
@@ -66,6 +67,9 @@ static bool showFullChart = false;
 static bool redrawRequested = true;
 static uint32_t startedAtMs = 0;
 static uint32_t lastDrawnMinute = UINT32_MAX;
+static uint32_t lastCurrentPeriodToken = 0U;
+static uint32_t noticeUntilMs = 0U;
+static char noticeText[49] = {0};
 static char serialLine[512] = {0};
 static size_t serialLineLength = 0;
 static bool discardSerialLine = false;
@@ -240,6 +244,14 @@ static PeriodKey nextPeriod(PeriodKey period)
   return period;
 }
 
+static uint32_t periodToken(const PeriodKey &period)
+{
+  return (uint32_t)period.year * 1000000UL
+    + (uint32_t)period.month * 10000UL
+    + (uint32_t)period.day * 100UL
+    + period.startHour;
+}
+
 static bool payloadMatchesPeriod(
   const DevicePayloadData *payload,
   const PeriodKey &period
@@ -266,6 +278,23 @@ static const DevicePayloadData *payloadForPeriod(const PeriodKey &period)
   }
   const DevicePayloadData *next = payloadStore.payload(true);
   return payloadMatchesPeriod(next, period) ? next : nullptr;
+}
+
+static bool noticeActive(uint32_t nowMs)
+{
+  return noticeText[0] != '\0' && (int32_t)(noticeUntilMs - nowMs) > 0;
+}
+
+static void clearNotice()
+{
+  noticeText[0] = '\0';
+  noticeUntilMs = 0U;
+}
+
+static void setNotice(const char *text, uint32_t nowMs)
+{
+  snprintf(noticeText, sizeof(noticeText), "%s", text);
+  noticeUntilMs = nowMs + 5000U;
 }
 
 static void drawCenteredUtf8(int y, const char *text)
@@ -334,7 +363,8 @@ static void drawTagRow(int y, const char *label, const char *value)
 
 static const char *rowValue(
   const DevicePayloadData *payload,
-  const DeviceResultRow &row
+  const DeviceResultRow &row,
+  seeway::GuidanceRow kind
 )
 {
   if (payload == nullptr) {
@@ -343,7 +373,7 @@ static const char *rowValue(
   if (!payload->verified) {
     return "依据不足";
   }
-  return row.text[0] == '\0' ? "--" : row.text;
+  return row.text[0] == '\0' ? seeway::emptyGuidanceText(kind) : row.text;
 }
 
 static void fallbackRange(const PeriodKey &period, char *output, size_t size)
@@ -403,14 +433,23 @@ static void drawSummary(
   u8g2->drawStr(148, 109, rangeText);
 
   DeviceResultRow emptyRow = {};
-  drawTagRow(149, "有利", rowValue(payload, payload ? payload->favorable : emptyRow));
-  drawTagRow(177, "注意", rowValue(payload, payload ? payload->caution : emptyRow));
-  drawTagRow(205, "方位", rowValue(payload, payload ? payload->direction : emptyRow));
-  drawTagRow(233, "建议", rowValue(payload, payload ? payload->advice : emptyRow));
+  drawTagRow(149, "有利", rowValue(payload,
+    payload ? payload->favorable : emptyRow, seeway::GuidanceRow::Favorable));
+  drawTagRow(177, "注意", rowValue(payload,
+    payload ? payload->caution : emptyRow, seeway::GuidanceRow::Caution));
+  drawTagRow(205, "方位", rowValue(payload,
+    payload ? payload->direction : emptyRow, seeway::GuidanceRow::Direction));
+  drawTagRow(233, "建议", rowValue(payload,
+    payload ? payload->advice : emptyRow, seeway::GuidanceRow::Advice));
 
   u8g2->setDrawColor(0);
-  u8g2->drawFrame(8, 242, 384, 8);
-  if (!showNextShichen) {
+  if (noticeActive(millis())) {
+    u8g2->setFont(u8g2_font_wqy12_t_gb2312);
+    drawCenteredUtf8(254, noticeText);
+  } else {
+    u8g2->drawFrame(8, 242, 384, 8);
+  }
+  if (!showNextShichen && !noticeActive(millis())) {
     int elapsedMinutes = period.index == 0U
       ? (clock.hour == 23U ? clock.minute : 60 + clock.minute)
       : ((int)clock.hour - period.startHour) * 60 + clock.minute;
@@ -420,7 +459,7 @@ static void drawSummary(
   u8g2->drawHLine(8, 258, 384);
   u8g2->setFont(u8g2_font_6x13_tf);
   snprintf(diagnostics, sizeof(diagnostics),
-    "%s  %s  KEY %lu  BOOT %lu  v0.3.0",
+    "%s  %s  KEY %lu  BOOT %lu  v0.3.1",
     rtcReady ? "RTC OK" : "RTC FALLBACK",
     payload == nullptr ? "UNSYNCED" : (payload->verified ? "VERIFIED" : "BLOCKED"),
     (unsigned long)keyButton.presses,
@@ -577,10 +616,36 @@ static void processSerialLine(const char *line)
   }
   if (strcmp(line, "STATUS") == 0) {
     payloadStore.printStatus(Serial);
+    const ClockSnapshot clock = currentClock();
+    const PeriodKey current = currentPeriod(clock);
+    const PeriodKey next = nextPeriod(current);
+    Serial.printf(
+      "UI selection=%s view=%s current_payload=%u next_payload=%u key_pin=%u boot_pin=%u key_presses=%lu boot_presses=%lu\r\n",
+      showNextShichen ? "next" : "current",
+      showFullChart ? "chart" : "summary",
+      payloadForPeriod(current) == nullptr ? 0U : 1U,
+      payloadForPeriod(next) == nullptr ? 0U : 1U,
+      digitalRead(KEY_PIN) == HIGH ? 1U : 0U,
+      digitalRead(BOOT_PIN) == HIGH ? 1U : 0U,
+      (unsigned long)keyButton.presses,
+      (unsigned long)bootButton.presses
+    );
     return;
   }
   if (strcmp(line, "SELECT=CURRENT") == 0 || strcmp(line, "SELECT=NEXT") == 0) {
-    showNextShichen = strcmp(line, "SELECT=NEXT") == 0;
+    const bool requestsNext = strcmp(line, "SELECT=NEXT") == 0;
+    const ClockSnapshot clock = currentClock();
+    const PeriodKey current = currentPeriod(clock);
+    const bool nextAvailable = payloadForPeriod(nextPeriod(current)) != nullptr;
+    if (requestsNext && !nextAvailable) {
+      showNextShichen = false;
+      setNotice("下一时辰尚未同步", millis());
+      redrawRequested = true;
+      Serial.println("SELECT_BLOCKED selection=next reason=payload-missing");
+      return;
+    }
+    showNextShichen = requestsNext;
+    clearNotice();
     redrawRequested = true;
     Serial.printf("SELECT_OK selection=%s\r\n", showNextShichen ? "next" : "current");
     return;
@@ -740,7 +805,7 @@ void setup()
   storageReady = payloadStore.begin();
 
   Serial.printf(
-    "SEAWAY_READY board=ESP32-S3-RLCD-4.2 flash=%lu psram=%lu rtc=%s storage=%s version=0.3.0\r\n",
+    "SEAWAY_READY board=ESP32-S3-RLCD-4.2 flash=%lu psram=%lu rtc=%s storage=%s version=0.3.1\r\n",
     (unsigned long)ESP.getFlashChipSize(),
     (unsigned long)ESP.getPsramSize(),
     rtcReady ? "PCF85063" : "fallback",
@@ -756,11 +821,39 @@ void loop()
   const uint32_t nowMs = millis();
   readSerialCommands();
 
-  if (buttonPressed(keyButton, nowMs)) {
-    showNextShichen = !showNextShichen;
+  const ClockSnapshot clock = currentClock();
+  const PeriodKey current = currentPeriod(clock);
+  const uint32_t currentToken = periodToken(current);
+  if (lastCurrentPeriodToken == 0U) {
+    lastCurrentPeriodToken = currentToken;
+  } else if (lastCurrentPeriodToken != currentToken) {
+    showNextShichen = seeway::normalizePreviewForPeriod(
+      showNextShichen,
+      lastCurrentPeriodToken,
+      currentToken
+    );
+    lastCurrentPeriodToken = currentToken;
+    clearNotice();
     redrawRequested = true;
-    Serial.printf("BUTTON key=KEY action=toggle-shichen selection=%s count=%lu\r\n",
-      showNextShichen ? "next" : "current", (unsigned long)keyButton.presses);
+    Serial.printf("PERIOD_CHANGE selection=current token=%lu\r\n",
+      (unsigned long)currentToken);
+  }
+
+  if (buttonPressed(keyButton, nowMs)) {
+    const bool nextAvailable = payloadForPeriod(nextPeriod(current)) != nullptr;
+    const seeway::SelectionDecision decision =
+      seeway::toggleShichenSelection(showNextShichen, nextAvailable);
+    showNextShichen = decision.showNext;
+    if (decision.nextMissing) {
+      setNotice("下一时辰尚未同步", nowMs);
+    } else {
+      clearNotice();
+    }
+    redrawRequested = true;
+    Serial.printf("BUTTON key=KEY action=%s selection=%s count=%lu\r\n",
+      decision.nextMissing ? "next-missing" : "toggle-shichen",
+      showNextShichen ? "next" : "current",
+      (unsigned long)keyButton.presses);
   }
   if (buttonPressed(bootButton, nowMs)) {
     showFullChart = !showFullChart;
@@ -769,9 +862,12 @@ void loop()
       showFullChart ? "chart" : "summary", (unsigned long)bootButton.presses);
   }
 
-  const ClockSnapshot clock = currentClock();
   const uint32_t minuteOfDay = clock.hour * 60U + clock.minute;
   if (minuteOfDay != lastDrawnMinute) {
+    redrawRequested = true;
+  }
+  if (noticeText[0] != '\0' && !noticeActive(nowMs)) {
+    clearNotice();
     redrawRequested = true;
   }
   if (redrawRequested) {
