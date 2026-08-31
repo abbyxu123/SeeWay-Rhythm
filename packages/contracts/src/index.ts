@@ -5,3 +5,4 @@ export * from "./device";
 export * from "./evidence";
 export * from "./memory";
 export * from "./profile";
+export * from "./voice";
