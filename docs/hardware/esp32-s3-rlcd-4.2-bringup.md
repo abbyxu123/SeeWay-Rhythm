@@ -9,7 +9,7 @@
 - Serial observations: `/dev/cu.usbmodem2101` on 2026-08-22 and
   `/dev/cu.usbmodem101` on 2026-08-24
 - USB serial: Espressif USB-Serial/JTAG
-- Chip: ESP32-S3 QFN56 revision v0.2, MAC `94:a9:90:cd:50:a0`
+- Chip: ESP32-S3 QFN56 revision v0.2; MAC retained only in private device records
 - Detected memory: 16 MB QIO Flash and 8 MB embedded PSRAM
 - Observation timezone: Asia/Shanghai
 - Official documentation: https://docs.waveshare.net/ESP32-S3-RLCD-4.2/
@@ -94,11 +94,14 @@ custom upload and validated with `esptool image-info`:
 - SHA-256:
   `d0591315a722d33f4a08931a0341ab840a6c15c56b289d621e8fc18bec8d55a8`
 
-Two attempts to read the entire 16 MB device flash were rejected rather than
-accepted as backups. The 921600 attempt ended with a digest mismatch, and the
-460800 attempt stopped at about 36% with serial corruption. Neither partial
-file was retained. Custom uploads therefore use 460800 or lower, do not enable
-`Erase All Flash`, and retain the separately validated official recovery image.
+Earlier full-flash reads through esptool's flasher stub were rejected after
+digest or serial-frame failures. A later 16 MB read used the ESP32-S3 ROM
+bootloader (`--no-stub`) at 115200 baud and passed exact-size and SHA-256
+manifest verification. Its partition table decoded as two 3 MB OTA app slots,
+FFat storage, NVS, OTA metadata, and coredump storage. The image, device MAC,
+and digest remain under `data/private/device-backups/` and are excluded from
+Git. Custom uploads must not enable `Erase All Flash` and must retain both this
+verified private image and the separately validated official recovery image.
 
 ## First firmware acceptance test
 

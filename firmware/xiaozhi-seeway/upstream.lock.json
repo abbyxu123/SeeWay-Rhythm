@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/78/xiaozhi-esp32.git",
+  "release": "v2.4.2",
+  "commit": "e8d8a4010788afd60f0c8aa3b2e3d0a7bb8f02e5",
+  "boardId": "waveshare-esp32-s3-rlcd-4.2",
+  "espIdfVersion": "6.0.2",
+  "license": "MIT",
+  "sourceArchive": {
+    "url": "https://github.com/78/xiaozhi-esp32/archive/e8d8a4010788afd60f0c8aa3b2e3d0a7bb8f02e5.tar.gz",
+    "sha256": "03e6030af356bea7547bf3c1cfdbaf196de04baff4f094a76f9ebcc1515c1ccb"
+  }
+}
