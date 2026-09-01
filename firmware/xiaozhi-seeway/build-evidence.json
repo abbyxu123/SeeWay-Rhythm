@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "buildId": "build-20260901T101534Z",
+  "builtAt": "2026-09-01T10:15:34Z",
+  "board": "seeway-rhythm-rlcd-4.2",
+  "target": "esp32s3-n16r8",
+  "display": {
+    "technology": "rlcd",
+    "width": 400,
+    "height": 300
+  },
+  "upstreamCommit": "e8d8a4010788afd60f0c8aa3b2e3d0a7bb8f02e5",
+  "upstreamArchiveSha256": "03e6030af356bea7547bf3c1cfdbaf196de04baff4f094a76f9ebcc1515c1ccb",
+  "espIdfVersion": "v6.0.2",
+  "configuration": {
+    "flashBytes": 16777216,
+    "psramBytes": 8388608,
+    "psramMode": "octal-80mhz",
+    "deviceAec": true,
+    "language": "zh-CN"
+  },
+  "binaries": {
+    "application": {
+      "bytes": 2921760,
+      "partitionBytes": 4128768,
+      "sha256": "a6fdd3f2988bd633ccb9ea8b389a022b838ca1132cf0429f63a3f8f2ba5fd644"
+    },
+    "assets": {
+      "bytes": 2609393,
+      "partitionBytes": 8388608,
+      "sha256": "fd40a4031b0d764c545baa1ffb74fa5388047de202423d182865d9a432f91537"
+    },
+    "merged": {
+      "bytes": 10998001,
+      "flashBytes": 16777216,
+      "sha256": "6748040ba71d1b47d25bea8f8b911a0dce4d3fc4599e65f3b8681cabf66dce46"
+    }
+  },
+  "flashed": false
+}

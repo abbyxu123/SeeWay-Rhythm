@@ -1,0 +1,19 @@
+{
+    "manufacturer": "seeway",
+    "type": "seeway-rhythm-rlcd-4.2",
+    "target": "esp32s3",
+    "builds": [
+        {
+            "name": "seeway-rhythm-rlcd-4.2",
+            "sdkconfig_append": [
+                "CONFIG_BOARD_TYPE_SEEWAY_RHYTHM_RLCD_4_2=y",
+                "CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y",
+                "CONFIG_SPIRAM=y",
+                "CONFIG_SPIRAM_MODE_OCT=y",
+                "CONFIG_SPIRAM_SPEED_80M=y",
+                "CONFIG_USE_WECHAT_MESSAGE_STYLE=n",
+                "CONFIG_USE_DEVICE_AEC=y"
+            ]
+        }
+    ]
+}

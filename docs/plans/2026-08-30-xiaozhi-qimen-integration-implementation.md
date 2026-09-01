@@ -105,8 +105,7 @@
 ### Task 6: Create The Custom XiaoZhi Board Overlay
 
 **Files:**
-- Create: `firmware/xiaozhi-seeway/overlay/main/boards/waveshare/seeway-rhythm-rlcd-4.2/`
-- Create: `firmware/xiaozhi-seeway/overlay/main/seeway/`
+- Create: `firmware/xiaozhi-seeway/overlay/main/boards/seeway/seeway-rhythm-rlcd-4.2/`
 - Create: `firmware/xiaozhi-seeway/scripts/prepare-upstream.sh`
 - Create: `firmware/xiaozhi-seeway/scripts/build.sh`
 - Test: `tests/xiaozhi-overlay.test.ts`

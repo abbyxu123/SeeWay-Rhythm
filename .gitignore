@@ -3,6 +3,7 @@ node_modules/
 dist/
 coverage/
 .worktrees/
+.toolchains/
 .env
 .env.*
 !.env.example
@@ -14,3 +15,7 @@ coverage/
 /data/private/
 /data/audio/
 /data/runtime/
+
+# Reproducible XiaoZhi preparation and binary evidence are generated locally.
+/firmware/xiaozhi-seeway/.work/
+/firmware/xiaozhi-seeway/artifacts/build-*/
