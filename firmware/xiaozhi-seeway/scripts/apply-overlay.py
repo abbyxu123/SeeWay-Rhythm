@@ -53,8 +53,16 @@ def main() -> None:
 """,
         f"""elseif({BOARD_SYMBOL})
     set(BOARD_DIR \"{BOARD_DIR}\")
-    set(BUILTIN_TEXT_FONT font_noto_sans_basic_30_4)
-    set(BUILTIN_ICON_FONT font_material_symbols_30_4)
+    set(BUILTIN_TEXT_FONT font_noto_sans_basic_14_1)
+    set(BUILTIN_ICON_FONT font_material_symbols_14_1)
+    list(APPEND SOURCES
+        "seeway/seeway_screen_state.cc"
+        "seeway/seeway_display.cc"
+    )
+    list(APPEND INCLUDE_DIRS
+        "${{CMAKE_CURRENT_SOURCE_DIR}}/seeway"
+        "${{CMAKE_CURRENT_SOURCE_DIR}}/boards/${{BOARD_DIR}}"
+    )
 elseif(CONFIG_BOARD_TYPE_WAVESHARE_ESP32_S3_RLCD_4_2)
     set(BOARD_DIR \"waveshare/esp32-s3-rlcd-4.2\")
     set(BUILTIN_TEXT_FONT font_noto_sans_basic_30_4)

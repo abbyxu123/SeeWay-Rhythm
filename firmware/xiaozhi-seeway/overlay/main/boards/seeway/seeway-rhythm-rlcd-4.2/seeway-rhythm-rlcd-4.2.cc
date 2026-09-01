@@ -2,7 +2,7 @@
 #include <driver/i2c_master.h>
 #include <driver/spi_common.h>
 #include <esp_log.h>
-#include "custom_lcd_display.h"
+#include "seeway_display.h"
 #include "wifi_board.h"
 #include "application.h"
 #include "button.h"
@@ -11,16 +11,17 @@
 #include "wifi_station.h"
 #include "mcp_server.h"
 #include "lvgl.h"
-#include "custom_lcd_display.h"
 
 #define TAG "seeway_rhythm_rlcd_4_2"
+
+using seeway::SeeWayDisplay;
 
 class CustomBoard : public WifiBoard {
 private:
     i2c_master_bus_handle_t i2c_bus_;
     Button boot_button_;
     Button key_button_;
-    CustomLcdDisplay *display_;
+    SeeWayDisplay *display_;
     adc_oneshot_unit_handle_t adc1_handle;
     adc_cali_handle_t cali_handle;
     bool vbat_status = 0;
@@ -77,7 +78,7 @@ private:
         spi_config.dc = RLCD_DC_PIN;
         spi_config.cs = RLCD_CS_PIN;
         spi_config.rst = RLCD_RST_PIN;
-        display_ = new CustomLcdDisplay(NULL, NULL, RLCD_WIDTH,RLCD_HEIGHT,DISPLAY_OFFSET_X,DISPLAY_OFFSET_Y,DISPLAY_MIRROR_X,DISPLAY_MIRROR_Y,DISPLAY_SWAP_XY,spi_config);
+        display_ = new SeeWayDisplay(NULL, NULL, RLCD_WIDTH,RLCD_HEIGHT,DISPLAY_OFFSET_X,DISPLAY_OFFSET_Y,DISPLAY_MIRROR_X,DISPLAY_MIRROR_Y,DISPLAY_SWAP_XY,spi_config);
     }
 
     uint16_t BatterygetVoltage(void) {
