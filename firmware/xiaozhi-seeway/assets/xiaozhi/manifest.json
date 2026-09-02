@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "master": {
+    "path": "source/猫头.png",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true
+  },
+  "production": {
+    "canvas": {
+      "width": 96,
+      "height": 96
+    },
+    "anchor": {
+      "x": 48,
+      "y": 92
+    },
+    "states": [
+      {
+        "name": "idle-open",
+        "source": "source/expression_01_normal.png"
+      },
+      {
+        "name": "idle-blink",
+        "source": "source/expression_02_unamused.png"
+      },
+      {
+        "name": "listening",
+        "source": "source/expression_10_surprised.png"
+      },
+      {
+        "name": "thinking-a",
+        "source": "source/expression_02_unamused.png"
+      },
+      {
+        "name": "thinking-b",
+        "source": "source/expression_08_confident_wink.png"
+      },
+      {
+        "name": "speaking-closed",
+        "source": "source/expression_01_normal.png"
+      },
+      {
+        "name": "speaking-open",
+        "source": "source/expression_04_happy_tongue.png"
+      },
+      {
+        "name": "positive",
+        "source": "source/expression_05_excited_wink.png"
+      },
+      {
+        "name": "caution",
+        "source": "source/expression_06_annoyed.png"
+      },
+      {
+        "name": "muted-error",
+        "source": "source/expression_07_sad.png"
+      }
+    ]
+  },
+  "generated": {
+    "preview": "generated/contact-sheet.png",
+    "previewSha256": "47d0318b817015ed8e9144a089afa574b567814a2a3c4d52195c0522c32d8ec7",
+    "spriteSha256": {
+      "idle-open": "21638c28044b0bd3beaf79d4e94c15e66c0fde62c6a5c717ca2342331b32a9ea",
+      "idle-blink": "7ebbdc95ab2afd569a048bf0f40c8e18da33070f7621f452090967edba982757",
+      "listening": "951998a6268b7ae7ed36d4e97b0603f292489a93ddd95a9cc81b7479f1bed37f",
+      "thinking-a": "7ebbdc95ab2afd569a048bf0f40c8e18da33070f7621f452090967edba982757",
+      "thinking-b": "112f79c37abb33ee6fb753fd1e97944180d70969cd3da165f90371aed4a7ac02",
+      "speaking-closed": "21638c28044b0bd3beaf79d4e94c15e66c0fde62c6a5c717ca2342331b32a9ea",
+      "speaking-open": "f0494ac11de2a553f8d851967c466fd7fb888732a99d9a8c00c41918b633c852",
+      "positive": "1c460f2435185af37d72da68c14ae4547504d0e8a8071ef62b1d21119299a3f5",
+      "caution": "d3f2533eed1d0407bef61c63a95edc305ac5c9034ead7bdfafa83412513ba6fd",
+      "muted-error": "058e8111329d53ababdc681d0c464afe4754eba4bfb438119be3fcaa125be1c5"
+    },
+    "statePngSha256": {
+      "idle-open": "fa603e484fb48f201c9b112c16f8fcb3129b70fe5e5f57753df4d53ee88ba525",
+      "idle-blink": "60a11a808181ca309a10e1b960edf86a557535138a68c4523ced8ce2db28d230",
+      "listening": "7c2388534e75acf8271a223946334d1e059a114ebe2e2b888db21ae3790da176",
+      "thinking-a": "60a11a808181ca309a10e1b960edf86a557535138a68c4523ced8ce2db28d230",
+      "thinking-b": "c6c358533bfaa98df67fee80d5ec013bfa9cd34700f9babdce5c2d24c319a709",
+      "speaking-closed": "fa603e484fb48f201c9b112c16f8fcb3129b70fe5e5f57753df4d53ee88ba525",
+      "speaking-open": "eaff2d510ad0b6181d7bec51a1dca31eb6872c649414e4d79707197cd56dad9d",
+      "positive": "bd66960fbb02daf2770727b064355e78227cc6758f66ae141371fdc986c83e39",
+      "caution": "7a471aa8f735554964569f0af2ffcb9b79c98d7cfe1baadf39d9c87b2c15fc47",
+      "muted-error": "db36427f562b9c9fe0aacda863f1b0ee583e875885ff248f06a955d7b4ebba87"
+    },
+    "runtimeIncludeSha256": "26a0756a668357c66c416bb0c6efd6243d0f2bed36f811561a5cc8a8f79a3298"
+  }
+}

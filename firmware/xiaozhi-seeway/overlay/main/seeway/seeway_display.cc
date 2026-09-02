@@ -3,6 +3,7 @@
 #include "assets/lang_config.h"
 #include "board.h"
 #include "lvgl_theme.h"
+#include "seeway_character.h"
 
 #include <algorithm>
 #include <array>
@@ -296,6 +297,11 @@ void SeeWayDisplay::CreateVoiceView()
     lv_obj_t* character_box = MakeBox(voice_view_, 14, 18, 122, 166, 1);
     voice_character_label_ = MakeLabel(
         character_box, 6, 56, 110, 50, "小智", LV_TEXT_ALIGN_CENTER);
+    lv_obj_add_flag(voice_character_label_, LV_OBJ_FLAG_HIDDEN);
+    voice_character_image_ = lv_image_create(character_box);
+    lv_obj_set_pos(voice_character_image_, 13, 18);
+    lv_obj_set_style_image_recolor(voice_character_image_, Black(), 0);
+    lv_obj_set_style_image_recolor_opa(voice_character_image_, LV_OPA_COVER, 0);
     voice_state_label_ = MakeLabel(
         voice_view_, 152, 20, 232, 28, "我在听", LV_TEXT_ALIGN_CENTER);
     MakeDivider(voice_view_, 150, 52, 238, 1);
@@ -473,6 +479,12 @@ void SeeWayDisplay::UpdateStatusBar(bool update_all)
         model_.battery_percent = std::clamp(battery_level, 0, 100);
     }
     RenderHeaderLocked();
+    const ScreenMode mode = state_machine_.state().mode;
+    if (mode == ScreenMode::Listening ||
+        mode == ScreenMode::Thinking ||
+        mode == ScreenMode::Speaking) {
+        RenderVoiceLocked();
+    }
 }
 
 void SeeWayDisplay::RenderLocked()
@@ -639,8 +651,44 @@ void SeeWayDisplay::RenderVoiceLocked()
     }
     lv_label_set_text(voice_state_label_, state_text);
     lv_label_set_text(voice_character_label_, "小智");
+    const CharacterFrame frame = CharacterFrameAt(
+        CharacterStateLocked(), status_tick_ * 1000U);
+    lv_image_set_src(voice_character_image_, CharacterImage(frame));
     lv_label_set_text(
         transcript_label_, transcript_.empty() ? "请说" : transcript_.c_str());
+}
+
+CharacterState SeeWayDisplay::CharacterStateLocked() const
+{
+    if (emotion_.find("mute") != std::string::npos ||
+        emotion_.find("offline") != std::string::npos) {
+        return CharacterState::MutedError;
+    }
+    if (emotion_.find("sad") != std::string::npos ||
+        emotion_.find("angry") != std::string::npos ||
+        emotion_.find("caution") != std::string::npos) {
+        return CharacterState::Caution;
+    }
+    if (emotion_.find("happy") != std::string::npos ||
+        emotion_.find("laugh") != std::string::npos ||
+        emotion_.find("positive") != std::string::npos) {
+        return CharacterState::Positive;
+    }
+
+    switch (state_machine_.state().mode) {
+        case ScreenMode::Listening:
+            return CharacterState::Listening;
+        case ScreenMode::Thinking:
+            return CharacterState::Thinking;
+        case ScreenMode::Speaking:
+            return CharacterState::Speaking;
+        case ScreenMode::Ambient:
+        case ScreenMode::ChartDetail:
+        case ScreenMode::Market:
+        case ScreenMode::Error:
+            return CharacterState::Idle;
+    }
+    return CharacterState::Idle;
 }
 
 void SeeWayDisplay::RenderErrorLocked()
