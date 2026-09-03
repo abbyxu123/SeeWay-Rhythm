@@ -71,6 +71,10 @@ public:
     bool EnterMarket(std::uint64_t shichen_token);
     void ReturnToCurrent();
     bool ShowScreenError(ScreenError error, std::uint64_t shichen_token);
+    ScreenMode GetScreenMode();
+    bool ToggleCurrentChart();
+    bool AdvanceCurrentChartPage();
+    void SetPrivacyMuted(bool muted);
 
 private:
     static constexpr int kBranchCount = 12;
@@ -84,6 +88,7 @@ private:
     SeeWayScreenContent model_;
     std::string transcript_;
     std::string emotion_ = "neutral";
+    bool privacy_muted_ = false;
     bool ui_ready_ = false;
     std::uint32_t status_tick_ = 0U;
 

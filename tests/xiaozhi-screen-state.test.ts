@@ -15,6 +15,7 @@ describe("SeeWay XiaoZhi screen state", () => {
   it("keeps every user-visible state on the current shichen", () => {
     const buildDirectory = mkdtempSync(join(tmpdir(), "seeway-screen-state-"));
     const stateSource = resolve(seewayRoot, "seeway_screen_state.cc");
+    const buttonSource = resolve(seewayRoot, "seeway_buttons.cc");
     const testSource = resolve(
       firmwareRoot,
       "host-tests/screen_state_test.cpp",
@@ -33,6 +34,7 @@ describe("SeeWay XiaoZhi screen state", () => {
             "-I",
             seewayRoot,
             stateSource,
+            buttonSource,
             testSource,
             "-o",
             executable,
@@ -99,10 +101,16 @@ describe("SeeWay XiaoZhi screen state", () => {
     );
 
     expect(patcher).toContain("seeway/seeway_screen_state.cc");
+    expect(patcher).toContain("seeway/seeway_buttons.cc");
     expect(patcher).toContain("seeway/seeway_display.cc");
     expect(patcher).toContain("font_noto_sans_basic_14_1");
     expect(board).toContain('#include "seeway_display.h"');
     expect(board).toContain("SeeWayDisplay *display_");
     expect(board).toContain("new SeeWayDisplay");
+    expect(board).toContain("ButtonPolicy button_policy_");
+    expect(board).toContain("boot_button_.OnLongPress");
+    expect(board).toContain("key_button_.OnLongPress");
+    expect(board).toContain("GetAudioCodec()->EnableInput(false)");
+    expect(board).not.toContain("pwr_button_");
   });
 });

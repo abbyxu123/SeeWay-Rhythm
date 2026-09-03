@@ -2,6 +2,7 @@
 #include <driver/i2c_master.h>
 #include <driver/spi_common.h>
 #include <esp_log.h>
+#include "seeway_buttons.h"
 #include "seeway_display.h"
 #include "wifi_board.h"
 #include "application.h"
@@ -14,6 +15,16 @@
 
 #define TAG "seeway_rhythm_rlcd_4_2"
 
+namespace {
+constexpr uint16_t kLongPressMs = 1200;
+}
+
+using seeway::ButtonAction;
+using seeway::ButtonContext;
+using seeway::ButtonGesture;
+using seeway::ButtonPolicy;
+using seeway::PhysicalButton;
+using seeway::ScreenMode;
 using seeway::SeeWayDisplay;
 
 class CustomBoard : public WifiBoard {
@@ -21,7 +32,8 @@ private:
     i2c_master_bus_handle_t i2c_bus_;
     Button boot_button_;
     Button key_button_;
-    SeeWayDisplay *display_;
+    ButtonPolicy button_policy_;
+    SeeWayDisplay *display_ = nullptr;
     adc_oneshot_unit_handle_t adc1_handle;
     adc_cali_handle_t cali_handle;
     bool vbat_status = 0;
@@ -39,27 +51,61 @@ private:
         ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_bus_cfg, &i2c_bus_));
     }
 
+    ButtonContext CurrentButtonContext() {
+        const auto device_state = Application::GetInstance().GetDeviceState();
+        const auto screen_mode = display_ == nullptr
+            ? ScreenMode::Ambient
+            : display_->GetScreenMode();
+        return {device_state == kDeviceStateStarting, screen_mode};
+    }
+
+    void ExecuteButtonAction(ButtonAction action) {
+        auto& app = Application::GetInstance();
+        ESP_LOGI(TAG, "button action=%d", static_cast<int>(action));
+        switch (action) {
+            case ButtonAction::None:
+                return;
+            case ButtonAction::EnterWifiConfig:
+                EnterWifiConfigMode();
+                return;
+            case ButtonAction::ToggleChart:
+                display_->ToggleCurrentChart();
+                return;
+            case ButtonAction::AdvanceChartPage:
+                display_->AdvanceCurrentChartPage();
+                return;
+            case ButtonAction::ToggleVoice:
+                app.ToggleChatState();
+                return;
+            case ButtonAction::EnablePrivacyMute:
+                app.StopListening();
+                GetAudioCodec()->EnableInput(false);
+                display_->SetPrivacyMuted(true);
+                return;
+            case ButtonAction::DisablePrivacyMute:
+                display_->SetPrivacyMuted(false);
+                return;
+        }
+    }
+
+    void HandleButton(PhysicalButton button, ButtonGesture gesture) {
+        ExecuteButtonAction(button_policy_.Handle(
+            button, gesture, CurrentButtonContext()));
+    }
+
     void InitializeButtons() {
         boot_button_.OnClick([this]() {
-            auto& app = Application::GetInstance();
-            if (app.GetDeviceState() == kDeviceStateStarting) {
-                EnterWifiConfigMode();
-            }
+            HandleButton(PhysicalButton::Boot, ButtonGesture::ShortPress);
         });
-
+        boot_button_.OnLongPress([this]() {
+            HandleButton(PhysicalButton::Boot, ButtonGesture::LongPress);
+        });
         key_button_.OnClick([this]() {
-            auto& app = Application::GetInstance();
-            app.ToggleChatState();
+            HandleButton(PhysicalButton::Key, ButtonGesture::ShortPress);
         });
-
-#if CONFIG_USE_DEVICE_AEC
-        key_button_.OnDoubleClick([this]() {
-            auto& app = Application::GetInstance();
-            if (app.GetDeviceState() == kDeviceStateIdle) {
-                app.SetAecMode(app.GetAecMode() == kAecOff ? kAecOnDeviceSide : kAecOff);
-            }
+        key_button_.OnLongPress([this]() {
+            HandleButton(PhysicalButton::Key, ButtonGesture::LongPress);
         });
-#endif
     }
 
     void InitializeTools() {
@@ -136,11 +182,12 @@ private:
 
 public:
     CustomBoard()
-        : boot_button_(BOOT_BUTTON_GPIO), key_button_(KEY_BUTTON_GPIO) {
+        : boot_button_(BOOT_BUTTON_GPIO, false, kLongPressMs),
+          key_button_(KEY_BUTTON_GPIO, false, kLongPressMs) {
         InitializeI2c();
+        InitializeLcdDisplay();
         InitializeButtons();
         InitializeTools();
-        InitializeLcdDisplay();
    }
 
     virtual AudioCodec* GetAudioCodec() override {

@@ -352,6 +352,9 @@ void SeeWayDisplay::SetScreenContent(
     DisplayLockGuard lock(this);
     model_ = content;
     state_machine_.SyncShichen(shichen_token, status);
+    if (privacy_muted_) {
+        state_machine_.SetVoiceMode(ScreenMode::Listening, shichen_token);
+    }
     RenderLocked();
 }
 
@@ -396,6 +399,47 @@ bool SeeWayDisplay::ShowScreenError(
     return changed;
 }
 
+ScreenMode SeeWayDisplay::GetScreenMode()
+{
+    DisplayLockGuard lock(this);
+    return state_machine_.state().mode;
+}
+
+bool SeeWayDisplay::ToggleCurrentChart()
+{
+    DisplayLockGuard lock(this);
+    const bool changed = state_machine_.ToggleChart(
+        state_machine_.state().shichen_token);
+    RenderLocked();
+    return changed;
+}
+
+bool SeeWayDisplay::AdvanceCurrentChartPage()
+{
+    DisplayLockGuard lock(this);
+    const bool changed = state_machine_.AdvanceChartPage(
+        state_machine_.state().shichen_token);
+    RenderLocked();
+    return changed;
+}
+
+void SeeWayDisplay::SetPrivacyMuted(bool muted)
+{
+    DisplayLockGuard lock(this);
+    privacy_muted_ = muted;
+    emotion_ = muted ? "mute" : "neutral";
+    if (muted) {
+        transcript_ = "麦克风已关闭\n长按 KEY 恢复";
+        state_machine_.SetVoiceMode(
+            ScreenMode::Listening,
+            state_machine_.state().shichen_token);
+    } else {
+        transcript_.clear();
+        state_machine_.ReturnToCurrent();
+    }
+    RenderLocked();
+}
+
 void SeeWayDisplay::SetStatus(const char* status)
 {
     if (status == nullptr) {
@@ -414,7 +458,11 @@ void SeeWayDisplay::SetStatus(const char* status)
             state_machine_.SetVoiceMode(ScreenMode::Thinking, token);
         }
     } else if (std::strcmp(status, Lang::Strings::STANDBY) == 0) {
-        state_machine_.ReturnToCurrent();
+        if (privacy_muted_) {
+            state_machine_.SetVoiceMode(ScreenMode::Listening, token);
+        } else {
+            state_machine_.ReturnToCurrent();
+        }
     }
     RenderLocked();
 }
@@ -642,7 +690,9 @@ void SeeWayDisplay::RenderVoiceLocked()
     }
     const ScreenMode mode = state_machine_.state().mode;
     const char* state_text = "小智";
-    if (mode == ScreenMode::Listening) {
+    if (privacy_muted_) {
+        state_text = "隐私静音";
+    } else if (mode == ScreenMode::Listening) {
         state_text = "我在听";
     } else if (mode == ScreenMode::Thinking) {
         state_text = "正在分析";
@@ -660,7 +710,8 @@ void SeeWayDisplay::RenderVoiceLocked()
 
 CharacterState SeeWayDisplay::CharacterStateLocked() const
 {
-    if (emotion_.find("mute") != std::string::npos ||
+    if (privacy_muted_ ||
+        emotion_.find("mute") != std::string::npos ||
         emotion_.find("offline") != std::string::npos) {
         return CharacterState::MutedError;
     }

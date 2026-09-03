@@ -1,7 +1,12 @@
 #include <cassert>
 
+#include "seeway_buttons.h"
 #include "seeway_screen_state.h"
 
+using seeway::ButtonAction;
+using seeway::ButtonGesture;
+using seeway::ButtonPolicy;
+using seeway::PhysicalButton;
 using seeway::ChartPage;
 using seeway::DataStatus;
 using seeway::ScreenError;
@@ -74,6 +79,24 @@ int main()
     assert(!screen.SetVoiceMode(ScreenMode::Ambient, 101U));
     assert(!screen.SetVoiceMode(ScreenMode::ChartDetail, 101U));
     assert(screen.state().mode == ScreenMode::Ambient);
+
+    ButtonPolicy buttons;
+    const auto ambient = seeway::ButtonContext{false, ScreenMode::Ambient};
+    const auto chart = seeway::ButtonContext{false, ScreenMode::ChartDetail};
+    const auto starting = seeway::ButtonContext{true, ScreenMode::Ambient};
+    assert(buttons.Handle(PhysicalButton::Power, ButtonGesture::ShortPress, ambient) == ButtonAction::None);
+    assert(buttons.Handle(PhysicalButton::Power, ButtonGesture::LongPress, ambient) == ButtonAction::None);
+    assert(buttons.Handle(PhysicalButton::Boot, ButtonGesture::ShortPress, starting) == ButtonAction::EnterWifiConfig);
+    assert(buttons.Handle(PhysicalButton::Key, ButtonGesture::ShortPress, starting) == ButtonAction::None);
+    assert(buttons.Handle(PhysicalButton::Boot, ButtonGesture::ShortPress, ambient) == ButtonAction::None);
+    assert(buttons.Handle(PhysicalButton::Boot, ButtonGesture::LongPress, ambient) == ButtonAction::ToggleChart);
+    assert(buttons.Handle(PhysicalButton::Boot, ButtonGesture::ShortPress, chart) == ButtonAction::AdvanceChartPage);
+    assert(buttons.Handle(PhysicalButton::Key, ButtonGesture::ShortPress, ambient) == ButtonAction::ToggleVoice);
+    assert(buttons.Handle(PhysicalButton::Key, ButtonGesture::LongPress, ambient) == ButtonAction::EnablePrivacyMute);
+    assert(buttons.privacy_muted());
+    assert(buttons.Handle(PhysicalButton::Key, ButtonGesture::ShortPress, ambient) == ButtonAction::None);
+    assert(buttons.Handle(PhysicalButton::Key, ButtonGesture::LongPress, ambient) == ButtonAction::DisablePrivacyMute);
+    assert(!buttons.privacy_muted());
 
     return 0;
 }

@@ -74,8 +74,9 @@ describe("SeeWay XiaoZhi board overlay", () => {
 
     expect(source).toContain("Button boot_button_");
     expect(source).toContain("Button key_button_");
-    expect(source).toContain("boot_button_(BOOT_BUTTON_GPIO)");
-    expect(source).toContain("key_button_(KEY_BUTTON_GPIO)");
+    expect(source).toContain("kLongPressMs = 1200");
+    expect(source).toContain("boot_button_(BOOT_BUTTON_GPIO, false, kLongPressMs)");
+    expect(source).toContain("key_button_(KEY_BUTTON_GPIO, false, kLongPressMs)");
     expect(source).toContain("BoxAudioCodec");
     expect(source).toContain("AUDIO_CODEC_ES7210_ADDR");
     expect(source).toContain("AUDIO_CODEC_ES8311_ADDR");

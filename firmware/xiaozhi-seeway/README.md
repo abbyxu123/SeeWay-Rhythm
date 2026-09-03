@@ -51,9 +51,9 @@ evidence directory. It never writes to or erases a connected device.
 ## Verified build
 
 - Board identity: `seeway-rhythm-rlcd-4.2`, ESP32-S3 N16R8, 400 x 300 RLCD
-- Application: 2,921,760 bytes in a 4,128,768-byte OTA partition
-- Assets: 2,609,393 bytes in an 8,388,608-byte partition
-- Merged image: 10,998,001 bytes in 16,777,216-byte flash
+- Application: 2,738,784 bytes in a 4,128,768-byte OTA partition
+- Assets: 269,881 bytes in an 8,388,608-byte partition
+- Merged image: 8,658,489 bytes in 16,777,216-byte flash
 
 `build-evidence.json` is the tracked, machine-readable receipt for the latest
 reviewed build. The timestamped binaries stay out of Git because they are local
