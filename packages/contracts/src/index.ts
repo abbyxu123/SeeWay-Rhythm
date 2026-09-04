@@ -7,3 +7,4 @@ export * from "./evidence";
 export * from "./memory";
 export * from "./profile";
 export * from "./voice";
+export * from "./market";

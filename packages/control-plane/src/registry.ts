@@ -173,7 +173,8 @@ export function createAgentRegistry(
       const definition = definitionsById[agentId];
       if (
         definition.role === "domain" &&
-        definition.calculationCore === "qimen-core"
+        definition.calculationCore === "qimen-core" &&
+        definition.id !== "qimen-finance"
       ) {
         return freezeDefinition({
           ...definition,

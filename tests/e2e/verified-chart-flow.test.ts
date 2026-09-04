@@ -71,9 +71,12 @@ describe("verified Qimen chart flow", () => {
     expect(availability.availability).toBe("available");
     expect(
       registry
-        .filter(({ calculationCore }) => calculationCore === "qimen-core")
+        .filter(({ id }) => id === "qimen-rhythm" || id === "qimen-query")
         .every(({ availability: state }) => state === "available"),
     ).toBe(true);
+    expect(
+      registry.find(({ id }) => id === "qimen-finance")?.availability,
+    ).toBe("unverified");
 
     for (const verification of verifications) {
       expect(verification).toMatchObject({
