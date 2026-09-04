@@ -4,6 +4,7 @@
 #include <esp_log.h>
 #include "seeway_buttons.h"
 #include "seeway_display.h"
+#include "seeway_mcp_tools.h"
 #include "wifi_board.h"
 #include "application.h"
 #include "button.h"
@@ -26,6 +27,7 @@ using seeway::ButtonPolicy;
 using seeway::PhysicalButton;
 using seeway::ScreenMode;
 using seeway::SeeWayDisplay;
+using seeway::SeeWayMcpTools;
 
 class CustomBoard : public WifiBoard {
 private:
@@ -33,6 +35,7 @@ private:
     Button boot_button_;
     Button key_button_;
     ButtonPolicy button_policy_;
+    SeeWayMcpTools qimen_mcp_tools_;
     SeeWayDisplay *display_ = nullptr;
     adc_oneshot_unit_handle_t adc1_handle;
     adc_cali_handle_t cali_handle;
@@ -109,6 +112,7 @@ private:
     }
 
     void InitializeTools() {
+        qimen_mcp_tools_.Register();
         auto& mcp_server = McpServer::GetInstance();
         mcp_server.AddTool("self.disp.network", "重新配网", PropertyList(),
         [this](const PropertyList&) -> ReturnValue {

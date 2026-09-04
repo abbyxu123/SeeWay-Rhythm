@@ -57,6 +57,7 @@ def main() -> None:
     set(BUILTIN_ICON_FONT font_material_symbols_14_1)
     list(APPEND SOURCES
         "seeway/seeway_buttons.cc"
+        "seeway/seeway_mcp_tools.cc"
         "seeway/seeway_character.cc"
         "seeway/seeway_screen_state.cc"
         "seeway/seeway_display.cc"
