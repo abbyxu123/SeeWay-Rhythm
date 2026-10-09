@@ -9,3 +9,4 @@ export * from "./registry";
 export * from "./router";
 export * from "./voice-router";
 export * from "./voice-service";
+export * from "./market-service";

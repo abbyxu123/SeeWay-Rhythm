@@ -1,6 +1,17 @@
 # ESP32-S3-RLCD-4.2 Bring-up Record
 
-## Device identity
+## Current device safety (2026-09-07)
+
+The original 4.2-inch board recorded below was returned. A replacement of the
+same model arrived on 2026-09-06 and is currently unplugged at the user's request.
+Its identity and backup belong to separate private device records.
+
+Two ESP32-S3-Touch-AMOLED-1.8 boards are reserved for other projects. Do not
+open their serial ports, reset them, probe their chips, or write their flash.
+Match OS-level USB identity to the private 4.2-inch record before opening a port;
+an ESP32-S3 model name or a remembered port number is not sufficient.
+
+## Historical device identity
 
 - Board: Waveshare ESP32-S3-RLCD-4.2
 - Display: 4.2-inch reflective LCD, 300 x 400 pixels
@@ -15,8 +26,8 @@
 - Official documentation: https://docs.waveshare.net/ESP32-S3-RLCD-4.2/
 
 The serial device path is assigned by macOS and may change after reconnecting the
-board. Firmware and tooling must discover Espressif serial devices instead of
-hard-coding this path.
+board. Tooling must first match the OS-level USB identity of the intended board;
+never probe all Espressif serial devices to find a target.
 
 ## Factory firmware state
 

@@ -66,7 +66,7 @@ function canonicalJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
-function chartHash(chart: unknown): string {
+export function hashQimenChart(chart: unknown): string {
   return `sha256:${createHash("sha256").update(canonicalJson(chart)).digest("hex")}`;
 }
 
@@ -236,7 +236,7 @@ export function buildQimenDevicePayload(
   return DevicePayloadSchema.parse({
     ...commonFields(input, profile, context),
     verification: { status: "verified", issueCodes: [] },
-    chartHash: chartHash(chart),
+    chartHash: hashQimenChart(chart),
     guidanceStatus: "derived",
     rows,
     directions: guidance.categories.directions.map(

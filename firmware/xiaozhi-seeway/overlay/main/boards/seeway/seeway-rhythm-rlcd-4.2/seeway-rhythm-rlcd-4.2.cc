@@ -3,6 +3,7 @@
 #include <driver/spi_common.h>
 #include <esp_log.h>
 #include "seeway_buttons.h"
+#include "seeway_audio_privacy.h"
 #include "seeway_display.h"
 #include "seeway_mcp_tools.h"
 #include "wifi_board.h"
@@ -82,10 +83,13 @@ private:
                 return;
             case ButtonAction::EnablePrivacyMute:
                 app.StopListening();
-                GetAudioCodec()->EnableInput(false);
+                seeway::AudioInputPrivacy::SetMuted(true, [this]() {
+                    GetAudioCodec()->EnableInput(false);
+                });
                 display_->SetPrivacyMuted(true);
                 return;
             case ButtonAction::DisablePrivacyMute:
+                seeway::AudioInputPrivacy::SetMuted(false, []() {});
                 display_->SetPrivacyMuted(false);
                 return;
         }

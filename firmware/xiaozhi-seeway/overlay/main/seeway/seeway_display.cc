@@ -2,7 +2,6 @@
 
 #include "assets/lang_config.h"
 #include "board.h"
-#include "lvgl_theme.h"
 #include "seeway_character.h"
 
 #include <algorithm>
@@ -10,6 +9,8 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+
+LV_FONT_DECLARE(seeway_font_14);
 
 namespace seeway {
 namespace {
@@ -145,16 +146,15 @@ void SeeWayDisplay::SetupUI()
         lv_obj_set_style_bg_color(screen, White(), 0);
         lv_obj_set_style_text_color(screen, Black(), 0);
 
-        auto* theme = static_cast<LvglTheme*>(current_theme_);
-        if (theme != nullptr && theme->text_font() != nullptr) {
-            lv_obj_set_style_text_font(screen, theme->text_font()->font(), 0);
-        }
+        lv_obj_set_style_text_font(screen, &seeway_font_14, 0);
+        lv_obj_set_style_text_line_space(screen, 0, 0);
 
         root_ = MakeBox(screen, 0, 0, kScreenWidth, kScreenHeight);
         CreateHeader();
         CreateAmbientView();
         CreateChartView();
         CreateVoiceView();
+        CreateProvisioningView();
         CreateMarketView();
         CreateErrorView();
 
@@ -222,13 +222,13 @@ void SeeWayDisplay::CreateAmbientView()
         root_, 0, kHeaderHeight, kScreenWidth, kScreenHeight - kHeaderHeight);
 
     for (int index = 0; index < kBranchCount; ++index) {
-        const int x = 2 + index * 29;
-        branch_cells_[index] = MakeBox(ambient_view_, x, 2, 28, 23, 1);
+        const int x = 2 + index * 25;
+        branch_cells_[index] = MakeBox(ambient_view_, x, 2, 24, 23, 1);
         branch_labels_[index] = MakeLabel(
-            branch_cells_[index], 0, 2, 28, 18, kBranches[index], LV_TEXT_ALIGN_CENTER);
+            branch_cells_[index], 0, 2, 22, 18, kBranches[index], LV_TEXT_ALIGN_CENTER);
     }
     shichen_range_label_ = MakeLabel(
-        ambient_view_, 351, 4, 47, 19, "当前", LV_TEXT_ALIGN_CENTER);
+        ambient_view_, 304, 4, 94, 19, "当前", LV_TEXT_ALIGN_CENTER);
     MakeDivider(ambient_view_, 0, 28, kScreenWidth, 1);
 
     for (int row = 0; row < kAmbientRowCount; ++row) {
@@ -244,102 +244,119 @@ void SeeWayDisplay::CreateAmbientView()
 
 void SeeWayDisplay::CreateChartView()
 {
-    chart_view_ = MakeBox(
-        root_, 0, kHeaderHeight, kScreenWidth, kScreenHeight - kHeaderHeight);
-    chart_title_label_ = MakeLabel(chart_view_, 6, 2, 310, 22, "当前时辰奇门盘");
+    chart_view_ = MakeBox(root_, 0, 0, kScreenWidth, kScreenHeight);
+    chart_title_label_ = MakeLabel(
+        chart_view_, 8, 4, 292, 22, "当前时辰奇门盘");
     chart_page_label_ = MakeLabel(
-        chart_view_, 318, 2, 76, 22, "盘面 1/4", LV_TEXT_ALIGN_RIGHT);
-    MakeDivider(chart_view_, 0, 26, kScreenWidth, 1);
+        chart_view_, 304, 4, 88, 22, "盘面 1/4", LV_TEXT_ALIGN_RIGHT);
+    MakeDivider(chart_view_, 0, 28, kScreenWidth, 2);
 
-    chart_grid_view_ = MakeBox(chart_view_, 0, 28, kScreenWidth, 190);
+    chart_grid_view_ = MakeBox(chart_view_, 0, 31, kScreenWidth, 234);
     for (int index = 0; index < kPalaceCount; ++index) {
         const int column = index % 3;
         const int row = index / 3;
         lv_obj_t* cell = MakeBox(
-            chart_grid_view_, column * 133, row * 63, 134, 64, 1);
-        palace_labels_[index] = MakeLabel(cell, 3, 2, 127, 59, "");
+            chart_grid_view_, column * 133, row * 78, 134, 79, 1);
+        palace_labels_[index] = MakeLabel(cell, 4, 3, 126, 72, "");
     }
 
-    chart_pattern_view_ = MakeBox(chart_view_, 0, 28, kScreenWidth, 190);
+    chart_pattern_view_ = MakeBox(chart_view_, 0, 31, kScreenWidth, 234);
     for (int index = 0; index < kPatternLineCount; ++index) {
-        const int y = index * 47;
+        const int y = index * 56;
         pattern_labels_[index] = MakeLabel(
-            chart_pattern_view_, 8, y + 5, 384, 38, "");
-        MakeDivider(chart_pattern_view_, 4, y + 45, 392, 1);
+            chart_pattern_view_, 12, y + 5, 376, 46, "");
+        MakeDivider(chart_pattern_view_, 8, y + 54, 384, 1);
     }
 
-    chart_guidance_view_ = MakeBox(chart_view_, 0, 28, kScreenWidth, 190);
+    chart_guidance_view_ = MakeBox(chart_view_, 0, 31, kScreenWidth, 234);
     for (int index = 0; index < kGuidanceLineCount; ++index) {
-        const int y = index * 38;
+        const int y = index * 44;
         guidance_labels_[index] = MakeLabel(
-            chart_guidance_view_, 8, y + 3, 384, 32, "");
-        MakeDivider(chart_guidance_view_, 4, y + 37, 392, 1);
+            chart_guidance_view_, 12, y + 4, 376, 36, "");
+        MakeDivider(chart_guidance_view_, 8, y + 42, 384, 1);
     }
 
-    chart_evidence_view_ = MakeBox(chart_view_, 0, 28, kScreenWidth, 190);
+    chart_evidence_view_ = MakeBox(chart_view_, 0, 31, kScreenWidth, 234);
     for (int index = 0; index < kEvidenceLineCount; ++index) {
-        const int y = index * 47;
+        const int y = index * 56;
         evidence_labels_[index] = MakeLabel(
-            chart_evidence_view_, 8, y + 5, 384, 38, "");
-        MakeDivider(chart_evidence_view_, 4, y + 45, 392, 1);
+            chart_evidence_view_, 12, y + 5, 376, 46, "");
+        MakeDivider(chart_evidence_view_, 8, y + 54, 384, 1);
     }
 
-    MakeDivider(chart_view_, 0, 220, kScreenWidth, 1);
+    MakeDivider(chart_view_, 0, 267, kScreenWidth, 1);
     MakeLabel(
-        chart_view_, 6, 224, 388, 18,
+        chart_view_, 8, 275, 384, 20,
         "短按翻页  |  长按返回当前时辰", LV_TEXT_ALIGN_CENTER);
 }
 
 void SeeWayDisplay::CreateVoiceView()
 {
-    voice_view_ = MakeBox(
-        root_, 0, kHeaderHeight, kScreenWidth, kScreenHeight - kHeaderHeight);
-    lv_obj_t* character_box = MakeBox(voice_view_, 14, 18, 122, 166, 1);
+    voice_view_ = MakeBox(root_, 0, 0, kScreenWidth, kScreenHeight);
+    voice_state_label_ = MakeLabel(
+        voice_view_, 0, 8, kScreenWidth, 22, "小智", LV_TEXT_ALIGN_CENTER);
+    MakeDivider(voice_view_, 128, 34, 144, 1);
+
     voice_character_label_ = MakeLabel(
-        character_box, 6, 56, 110, 50, "小智", LV_TEXT_ALIGN_CENTER);
+        voice_view_, 0, 0, 1, 1, "小智", LV_TEXT_ALIGN_CENTER);
     lv_obj_add_flag(voice_character_label_, LV_OBJ_FLAG_HIDDEN);
-    voice_character_image_ = lv_image_create(character_box);
-    lv_obj_set_pos(voice_character_image_, 13, 18);
+    voice_character_image_ = lv_image_create(voice_view_);
+    lv_obj_set_pos(voice_character_image_, 116, 38);
     lv_obj_set_style_image_recolor(voice_character_image_, Black(), 0);
     lv_obj_set_style_image_recolor_opa(voice_character_image_, LV_OPA_COVER, 0);
-    voice_state_label_ = MakeLabel(
-        voice_view_, 152, 20, 232, 28, "我在听", LV_TEXT_ALIGN_CENTER);
-    MakeDivider(voice_view_, 150, 52, 238, 1);
-    transcript_label_ = MakeLabel(voice_view_, 152, 60, 232, 120, "请说");
-    MakeDivider(voice_view_, 8, 194, 384, 1);
+
+    MakeDivider(voice_view_, 24, 211, 352, 2);
+    transcript_label_ = MakeLabel(
+        voice_view_, 24, 221, 352, 70, "请说", LV_TEXT_ALIGN_CENTER);
+    lv_label_set_long_mode(transcript_label_, LV_LABEL_LONG_MODE_SCROLL);
+}
+
+void SeeWayDisplay::CreateProvisioningView()
+{
+    provisioning_view_ = MakeBox(root_, 0, 0, kScreenWidth, kScreenHeight);
     MakeLabel(
-        voice_view_, 12, 202, 376, 38,
-        "日常聊天与术数结论隔离；涉及奇门时只引用已校验结果",
-        LV_TEXT_ALIGN_CENTER);
+        provisioning_view_, 12, 8, 376, 20,
+        "SEEWAY / CONNECT", LV_TEXT_ALIGN_CENTER);
+    MakeDivider(provisioning_view_, 0, 34, kScreenWidth, 2);
+    MakeLabel(
+        provisioning_view_, 24, 54, 352, 28,
+        "连接设备", LV_TEXT_ALIGN_CENTER);
+    MakeDivider(provisioning_view_, 92, 88, 216, 1);
+    provisioning_label_ = MakeLabel(
+        provisioning_view_, 34, 108, 332, 104,
+        "正在建立配网热点", LV_TEXT_ALIGN_CENTER);
+    MakeDivider(provisioning_view_, 92, 226, 216, 1);
+    MakeLabel(
+        provisioning_view_, 24, 246, 352, 24,
+        "完成后自动回到当前时辰", LV_TEXT_ALIGN_CENTER);
 }
 
 void SeeWayDisplay::CreateMarketView()
 {
-    market_view_ = MakeBox(
-        root_, 0, kHeaderHeight, kScreenWidth, kScreenHeight - kHeaderHeight);
-    MakeLabel(market_view_, 12, 24, 376, 34, "市场模式", LV_TEXT_ALIGN_CENTER);
-    MakeDivider(market_view_, 32, 64, 336, 2);
+    market_view_ = MakeBox(root_, 0, 0, kScreenWidth, kScreenHeight);
+    MakeLabel(market_view_, 12, 34, 376, 34, "市场模式", LV_TEXT_ALIGN_CENTER);
+    MakeDivider(market_view_, 32, 78, 336, 2);
     MakeLabel(
-        market_view_, 24, 82, 352, 76,
+        market_view_, 24, 102, 352, 76,
         "等待独立市场盘面\n个人盘、市场盘与小智上下文分别校验",
         LV_TEXT_ALIGN_CENTER);
-    MakeDivider(market_view_, 32, 172, 336, 1);
+    MakeDivider(market_view_, 32, 198, 336, 1);
     MakeLabel(
-        market_view_, 16, 190, 368, 34,
+        market_view_, 16, 224, 368, 34,
         "术数观察  |  娱乐研究  |  非投资建议",
         LV_TEXT_ALIGN_CENTER);
 }
 
 void SeeWayDisplay::CreateErrorView()
 {
-    error_view_ = MakeBox(
-        root_, 0, kHeaderHeight, kScreenWidth, kScreenHeight - kHeaderHeight);
-    MakeLabel(error_view_, 12, 26, 376, 30, "本次内容暂停显示", LV_TEXT_ALIGN_CENTER);
-    MakeDivider(error_view_, 48, 66, 304, 2);
+    error_view_ = MakeBox(root_, 0, 0, kScreenWidth, kScreenHeight);
+    MakeLabel(error_view_, 12, 38, 376, 30, "本次内容暂停显示", LV_TEXT_ALIGN_CENTER);
+    MakeDivider(error_view_, 48, 80, 304, 2);
     error_label_ = MakeLabel(
-        error_view_, 28, 88, 344, 86, "", LV_TEXT_ALIGN_CENTER);
+        error_view_, 28, 108, 344, 86, "", LV_TEXT_ALIGN_CENTER);
+    MakeDivider(error_view_, 80, 214, 240, 1);
     MakeLabel(
-        error_view_, 20, 198, 360, 32,
+        error_view_, 20, 236, 360, 32,
         "返回后仍可查看当前时间与基础信息",
         LV_TEXT_ALIGN_CENTER);
 }
@@ -448,7 +465,9 @@ void SeeWayDisplay::SetStatus(const char* status)
 
     DisplayLockGuard lock(this);
     const std::uint64_t token = state_machine_.state().shichen_token;
-    if (std::strcmp(status, Lang::Strings::LISTENING) == 0) {
+    if (std::strcmp(status, Lang::Strings::WIFI_CONFIG_MODE) == 0) {
+        state_machine_.EnterProvisioning();
+    } else if (std::strcmp(status, Lang::Strings::LISTENING) == 0) {
         state_machine_.SetVoiceMode(ScreenMode::Listening, token);
     } else if (std::strcmp(status, Lang::Strings::SPEAKING) == 0) {
         state_machine_.SetVoiceMode(ScreenMode::Speaking, token);
@@ -471,14 +490,23 @@ void SeeWayDisplay::SetEmotion(const char* emotion)
 {
     DisplayLockGuard lock(this);
     emotion_ = emotion == nullptr ? "neutral" : emotion;
-    RenderVoiceLocked();
+    const ScreenMode mode = state_machine_.state().mode;
+    if (mode == ScreenMode::Listening ||
+        mode == ScreenMode::Thinking ||
+        mode == ScreenMode::Speaking) {
+        RenderVoiceLocked();
+    }
 }
 
 void SeeWayDisplay::SetChatMessage(const char* /*role*/, const char* content)
 {
     DisplayLockGuard lock(this);
     transcript_ = content == nullptr ? "" : content;
-    RenderVoiceLocked();
+    if (state_machine_.state().mode == ScreenMode::Provisioning) {
+        RenderProvisioningLocked();
+    } else {
+        RenderVoiceLocked();
+    }
 }
 
 void SeeWayDisplay::ClearChatMessages()
@@ -520,7 +548,8 @@ void SeeWayDisplay::UpdateStatusBar(bool update_all)
     status_tick_++;
     model_.clock = clock;
     model_.solar_date = date;
-    model_.weekday = kWeekdays[std::clamp(local_time.tm_wday, 0, 6)];
+    model_.weekday = local_time.tm_year >= 125
+        ? kWeekdays[std::clamp(local_time.tm_wday, 0, 6)] : "星期--";
     model_.minute = std::clamp(local_time.tm_min, 0, 59);
     model_.second = std::clamp(local_time.tm_sec, 0, 59);
     if (update_battery && battery_level >= 0) {
@@ -556,6 +585,10 @@ void SeeWayDisplay::RenderLocked()
         case ScreenMode::Speaking:
             ShowOnlyLocked(voice_view_);
             RenderVoiceLocked();
+            break;
+        case ScreenMode::Provisioning:
+            ShowOnlyLocked(provisioning_view_);
+            RenderProvisioningLocked();
             break;
         case ScreenMode::Market:
             ShowOnlyLocked(market_view_);
@@ -704,8 +737,20 @@ void SeeWayDisplay::RenderVoiceLocked()
     const CharacterFrame frame = CharacterFrameAt(
         CharacterStateLocked(), status_tick_ * 1000U);
     lv_image_set_src(voice_character_image_, CharacterImage(frame));
+    const char* text = transcript_.empty() ? "请说" : transcript_.c_str();
+    if (std::strcmp(lv_label_get_text(transcript_label_), text) != 0) {
+        lv_label_set_text(transcript_label_, text);
+    }
+}
+
+void SeeWayDisplay::RenderProvisioningLocked()
+{
+    if (!ui_ready_) {
+        return;
+    }
     lv_label_set_text(
-        transcript_label_, transcript_.empty() ? "请说" : transcript_.c_str());
+        provisioning_label_,
+        transcript_.empty() ? "正在建立配网热点" : transcript_.c_str());
 }
 
 CharacterState SeeWayDisplay::CharacterStateLocked() const
@@ -735,6 +780,7 @@ CharacterState SeeWayDisplay::CharacterStateLocked() const
             return CharacterState::Speaking;
         case ScreenMode::Ambient:
         case ScreenMode::ChartDetail:
+        case ScreenMode::Provisioning:
         case ScreenMode::Market:
         case ScreenMode::Error:
             return CharacterState::Idle;
@@ -749,9 +795,11 @@ void SeeWayDisplay::RenderErrorLocked()
 
 void SeeWayDisplay::ShowOnlyLocked(lv_obj_t* active_view)
 {
-    const std::array<lv_obj_t*, 5> views = {
-        ambient_view_, chart_view_, voice_view_, market_view_, error_view_,
+    const std::array<lv_obj_t*, 6> views = {
+        ambient_view_, chart_view_, voice_view_, provisioning_view_,
+        market_view_, error_view_,
     };
+    SetVisible(header_, active_view == ambient_view_);
     for (lv_obj_t* view : views) {
         SetVisible(view, view == active_view);
     }

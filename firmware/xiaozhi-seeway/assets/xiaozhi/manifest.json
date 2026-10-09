@@ -8,12 +8,12 @@
   },
   "production": {
     "canvas": {
-      "width": 96,
-      "height": 96
+      "width": 168,
+      "height": 168
     },
     "anchor": {
-      "x": 48,
-      "y": 92
+      "x": 84,
+      "y": 159
     },
     "states": [
       {
@@ -60,31 +60,93 @@
   },
   "generated": {
     "preview": "generated/contact-sheet.png",
-    "previewSha256": "47d0318b817015ed8e9144a089afa574b567814a2a3c4d52195c0522c32d8ec7",
+    "previewSha256": "f8e0ba451915522a019ca3cb7fb3c4807ad97405451ccc9183ea8bead62ee39a",
     "spriteSha256": {
-      "idle-open": "21638c28044b0bd3beaf79d4e94c15e66c0fde62c6a5c717ca2342331b32a9ea",
-      "idle-blink": "7ebbdc95ab2afd569a048bf0f40c8e18da33070f7621f452090967edba982757",
-      "listening": "951998a6268b7ae7ed36d4e97b0603f292489a93ddd95a9cc81b7479f1bed37f",
-      "thinking-a": "7ebbdc95ab2afd569a048bf0f40c8e18da33070f7621f452090967edba982757",
-      "thinking-b": "112f79c37abb33ee6fb753fd1e97944180d70969cd3da165f90371aed4a7ac02",
-      "speaking-closed": "21638c28044b0bd3beaf79d4e94c15e66c0fde62c6a5c717ca2342331b32a9ea",
-      "speaking-open": "f0494ac11de2a553f8d851967c466fd7fb888732a99d9a8c00c41918b633c852",
-      "positive": "1c460f2435185af37d72da68c14ae4547504d0e8a8071ef62b1d21119299a3f5",
-      "caution": "d3f2533eed1d0407bef61c63a95edc305ac5c9034ead7bdfafa83412513ba6fd",
-      "muted-error": "058e8111329d53ababdc681d0c464afe4754eba4bfb438119be3fcaa125be1c5"
+      "idle-open": "0a3e6c677499f75d2c30c3bf98356f81f16e5a1cea2f446ac0f18e6c8a3e59ef",
+      "idle-blink": "d22ebdc663aa023e36665552d2d3e25d1ad9a19733cc716abf8314de494f1648",
+      "listening": "cae11b20fb6c09ddbd0c7a5ffa79c6cb0ad58b5119414ba0a2221fcbd2e4038b",
+      "thinking-a": "d22ebdc663aa023e36665552d2d3e25d1ad9a19733cc716abf8314de494f1648",
+      "thinking-b": "3aed3f3bfe828c8e12f44fe890163f1d4b2b6121e8e95fdb6a99220b43a6747e",
+      "speaking-closed": "0a3e6c677499f75d2c30c3bf98356f81f16e5a1cea2f446ac0f18e6c8a3e59ef",
+      "speaking-open": "8207de95db90c228e99c24698803dcbeb9229d0964d8101975d22661f357d742",
+      "positive": "424f77719549707d956c7c0bf07526e9ee54b777ba3bb4cd4d69fe309803ce3a",
+      "caution": "dfde01619754c9e5deb47f2c08dbcdbdf5098657e298a3b95631b4f8c0cd771c",
+      "muted-error": "4a03e67d926fd75b7bd8aba603837defd3a9462fb852484fbbd4caeea52e9db6"
     },
     "statePngSha256": {
-      "idle-open": "fa603e484fb48f201c9b112c16f8fcb3129b70fe5e5f57753df4d53ee88ba525",
-      "idle-blink": "60a11a808181ca309a10e1b960edf86a557535138a68c4523ced8ce2db28d230",
-      "listening": "7c2388534e75acf8271a223946334d1e059a114ebe2e2b888db21ae3790da176",
-      "thinking-a": "60a11a808181ca309a10e1b960edf86a557535138a68c4523ced8ce2db28d230",
-      "thinking-b": "c6c358533bfaa98df67fee80d5ec013bfa9cd34700f9babdce5c2d24c319a709",
-      "speaking-closed": "fa603e484fb48f201c9b112c16f8fcb3129b70fe5e5f57753df4d53ee88ba525",
-      "speaking-open": "eaff2d510ad0b6181d7bec51a1dca31eb6872c649414e4d79707197cd56dad9d",
-      "positive": "bd66960fbb02daf2770727b064355e78227cc6758f66ae141371fdc986c83e39",
-      "caution": "7a471aa8f735554964569f0af2ffcb9b79c98d7cfe1baadf39d9c87b2c15fc47",
-      "muted-error": "db36427f562b9c9fe0aacda863f1b0ee583e875885ff248f06a955d7b4ebba87"
+      "idle-open": "b9be009eb336b37b418e7d5ff7f5a60d1dfe90017f07994c1825a3eb9940325c",
+      "idle-blink": "cd52e5f86a204b79db5bbb53af5aa6c30a4a97531ed8a317b5ae1245c3d7d237",
+      "listening": "4ec3cf05ec1d61281f0e35a3995537862b8224cd8df045a31a7f2ee97d8979e7",
+      "thinking-a": "cd52e5f86a204b79db5bbb53af5aa6c30a4a97531ed8a317b5ae1245c3d7d237",
+      "thinking-b": "9fd4785dac92d948b0f8871b8653353ebd5ecfa830d97d210f1a6bcd9a625de8",
+      "speaking-closed": "b9be009eb336b37b418e7d5ff7f5a60d1dfe90017f07994c1825a3eb9940325c",
+      "speaking-open": "3a07a4b4b1b19fe8254deaf304fc0dd6fafc7d27792a502309103dbdf0e6b1ba",
+      "positive": "c4204e872882578d9c93b97d399f6a3fea44ca3838172de9ec7a24ab09aeba2b",
+      "caution": "5601a2eb957028501d85829262095595125389850ee1f0289b642ed36d7fbe90",
+      "muted-error": "e07d08ddb5ed74123adb3780af4df5fd8384d759a4ec95825e035d1ed686c062"
     },
-    "runtimeIncludeSha256": "26a0756a668357c66c416bb0c6efd6243d0f2bed36f811561a5cc8a8f79a3298"
+    "runtimeIncludeSha256": "33b88264acd2cd7ae84690e050409bc5e2b7bbbc886e8811af80d80253525e7d",
+    "spriteBounds": {
+      "idle-open": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "idle-blink": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "listening": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "thinking-a": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "thinking-b": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "speaking-closed": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "speaking-open": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "positive": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "caution": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      },
+      "muted-error": {
+        "left": 9,
+        "top": 21,
+        "right": 158,
+        "bottom": 158
+      }
+    }
   }
 }

@@ -10,6 +10,7 @@ enum class ScreenMode : std::uint8_t {
     Listening,
     Thinking,
     Speaking,
+    Provisioning,
     Market,
     Error,
 };
@@ -55,6 +56,7 @@ public:
     bool ToggleChart(std::uint64_t context_token);
     bool AdvanceChartPage(std::uint64_t context_token);
     bool SetVoiceMode(ScreenMode mode, std::uint64_t context_token);
+    bool EnterProvisioning();
     bool EnterMarket(std::uint64_t context_token);
     bool ShowError(ScreenError error, std::uint64_t context_token);
     void ReturnToCurrent();

@@ -27,7 +27,7 @@ void ScreenStateMachine::SyncShichen(
 
     state_.shichen_token = shichen_token;
     state_.qimen_status = qimen_status;
-    if (token_changed ||
+    if ((token_changed && state_.mode != ScreenMode::Provisioning) ||
         (state_.mode == ScreenMode::ChartDetail &&
          qimen_status != DataStatus::Verified)) {
         ResetToAmbient();
@@ -85,6 +85,19 @@ bool ScreenStateMachine::SetVoiceMode(
     }
 
     state_.mode = mode;
+    state_.chart_page = ChartPage::Chart;
+    state_.error = ScreenError::None;
+    MarkChanged();
+    return true;
+}
+
+bool ScreenStateMachine::EnterProvisioning()
+{
+    if (state_.mode == ScreenMode::Provisioning) {
+        return false;
+    }
+
+    state_.mode = ScreenMode::Provisioning;
     state_.chart_page = ChartPage::Chart;
     state_.error = ScreenError::None;
     MarkChanged();

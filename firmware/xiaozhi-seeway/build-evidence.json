@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "buildId": "build-20260904T033039Z",
-  "builtAt": "2026-09-04T03:30:39Z",
+  "buildId": "build-20260907T100715Z",
+  "builtAt": "2026-09-07T10:07:15Z",
   "board": "seeway-rhythm-rlcd-4.2",
   "target": "esp32s3-n16r8",
   "display": {
@@ -21,9 +21,9 @@
   },
   "binaries": {
     "application": {
-      "bytes": 2745328,
+      "bytes": 3553280,
       "partitionBytes": 4128768,
-      "sha256": "1fa3452223564b249e1ac6cadb2fec1aaf37cf820b024344b221a8eba80c4e39"
+      "sha256": "4a1f37b130a3b6ef6fda4e3e18084f6ff6f9505b6cee1e4db6c43f08cb13392c"
     },
     "assets": {
       "bytes": 269881,
@@ -33,8 +33,15 @@
     "merged": {
       "bytes": 8658489,
       "flashBytes": 16777216,
-      "sha256": "1f4907e396d43a22199f14c8aff6b9ce67cbb41e07f3b786273d5d3487fb65b2"
+      "sha256": "80a0bd375f09ef29be30ba5bc2be7fe238a8d216b4a4dd83a253fd3f1fb33967"
     }
   },
-  "flashed": false
+  "flashed": false,
+  "validation": {
+    "nativeUiScenarios": 14,
+    "unitTests": 512,
+    "typecheckPassed": true,
+    "hardwareTested": false,
+    "qimenRuntimeTransportConnected": false
+  }
 }

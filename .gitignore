@@ -19,3 +19,4 @@ coverage/
 # Reproducible XiaoZhi preparation and binary evidence are generated locally.
 /firmware/xiaozhi-seeway/.work/
 /firmware/xiaozhi-seeway/artifacts/build-*/
+/firmware/xiaozhi-seeway/.tools/

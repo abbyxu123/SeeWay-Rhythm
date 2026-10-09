@@ -131,6 +131,8 @@ private:
     lv_obj_t* voice_character_image_ = nullptr;
     lv_obj_t* transcript_label_ = nullptr;
 
+    lv_obj_t* provisioning_view_ = nullptr;
+    lv_obj_t* provisioning_label_ = nullptr;
     lv_obj_t* market_view_ = nullptr;
     lv_obj_t* error_view_ = nullptr;
     lv_obj_t* error_label_ = nullptr;
@@ -139,6 +141,7 @@ private:
     void CreateAmbientView();
     void CreateChartView();
     void CreateVoiceView();
+    void CreateProvisioningView();
     void CreateMarketView();
     void CreateErrorView();
     void RenderLocked();
@@ -147,6 +150,7 @@ private:
     void RenderAmbientLocked();
     void RenderChartLocked();
     void RenderVoiceLocked();
+    void RenderProvisioningLocked();
     void RenderErrorLocked();
     CharacterState CharacterStateLocked() const;
     void ShowOnlyLocked(lv_obj_t* active_view);

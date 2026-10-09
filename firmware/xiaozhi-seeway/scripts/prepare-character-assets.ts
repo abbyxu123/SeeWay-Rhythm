@@ -15,6 +15,13 @@ type RgbaImage = {
   pixels: Uint8Array;
 };
 
+type PixelBounds = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
+
 type CharacterManifest = {
   schemaVersion: number;
   master: {
@@ -32,6 +39,7 @@ type CharacterManifest = {
     preview: string;
     previewSha256: string;
     spriteSha256: Record<string, string>;
+    spriteBounds?: Record<string, PixelBounds>;
     statePngSha256?: Record<string, string>;
     runtimeIncludeSha256?: string;
   };
@@ -188,7 +196,7 @@ function readPng(path: string): RgbaImage {
   return { width, height, pixels };
 }
 
-function contentBounds(image: RgbaImage): { left: number; top: number; right: number; bottom: number } {
+function contentBounds(image: RgbaImage): PixelBounds {
   let left = image.width;
   let top = image.height;
   let right = -1;
@@ -204,6 +212,26 @@ function contentBounds(image: RgbaImage): { left: number; top: number; right: nu
   }
   if (right < left || bottom < top) {
     throw new Error("Character layer has no visible pixels");
+  }
+  return { left, top, right, bottom };
+}
+
+function maskBounds(mask: Uint8Array, width: number, height: number): PixelBounds {
+  let left = width;
+  let top = height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (mask[y * width + x] !== 1) continue;
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x);
+      bottom = Math.max(bottom, y);
+    }
+  }
+  if (right < left || bottom < top) {
+    throw new Error("Character mask has no visible pixels");
   }
   return { left, top, right, bottom };
 }
@@ -276,8 +304,41 @@ function createStateMask(
   anchor: { x: number; y: number },
 ): Uint8Array {
   const mask = new Uint8Array(width * height);
-  drawLayer(mask, width, height, master, 94, 92, anchor.x, anchor.y + 2, 218);
-  drawLayer(mask, width, height, expression, 58, 38, anchor.x, 78, 232);
+  drawLayer(
+    mask,
+    width,
+    height,
+    master,
+    Math.max(1, width - 18),
+    Math.max(1, height - 18),
+    anchor.x,
+    anchor.y,
+    218,
+  );
+
+  const expressionMask = new Uint8Array(width * height);
+  drawLayer(
+    expressionMask,
+    width,
+    height,
+    expression,
+    Math.round(width * 0.6),
+    Math.round(height * 0.4),
+    anchor.x,
+    Math.round(height * 0.79),
+    232,
+  );
+  const faceLeft = Math.round(width * 0.18);
+  const faceRight = Math.round(width * 0.82);
+  const faceTop = Math.round(height * 0.3);
+  const faceBottom = Math.round(height * 0.84);
+  for (let y = faceTop; y <= faceBottom; y++) {
+    for (let x = faceLeft; x <= faceRight; x++) {
+      if (expressionMask[y * width + x] === 1) {
+        mask[y * width + x] = 1;
+      }
+    }
+  }
   return mask;
 }
 
@@ -484,6 +545,7 @@ function main(): void {
   const masks: Uint8Array[] = [];
   const packedStates: Array<{ name: string; packed: Uint8Array }> = [];
   const spriteSha256: Record<string, string> = {};
+  const spriteBounds: Record<string, PixelBounds> = {};
   const statePngSha256: Record<string, string> = {};
   const statePngs = new Map<string, Buffer>();
 
@@ -501,6 +563,7 @@ function main(): void {
     masks.push(mask);
     packedStates.push({ name: state.name, packed });
     spriteSha256[state.name] = sha256(packed);
+    spriteBounds[state.name] = maskBounds(mask, width, height);
     statePngSha256[state.name] = sha256(png);
     statePngs.set(state.name, png);
   }
@@ -515,6 +578,11 @@ function main(): void {
     assertEqual(manifest.generated.runtimeIncludeSha256 ?? "", includeHash, "Runtime include hash");
     for (const state of manifest.production.states) {
       assertEqual(manifest.generated.spriteSha256[state.name] ?? "", spriteSha256[state.name]!, `${state.name} sprite hash`);
+      assertEqual(
+        JSON.stringify(manifest.generated.spriteBounds?.[state.name] ?? null),
+        JSON.stringify(spriteBounds[state.name]),
+        `${state.name} sprite bounds`,
+      );
       assertEqual(manifest.generated.statePngSha256?.[state.name] ?? "", statePngSha256[state.name]!, `${state.name} PNG hash`);
       const generatedPath = join(assetRoot, `generated/states/${state.name}.png`);
       if (!existsSync(generatedPath)) throw new Error(`Missing generated state: ${state.name}`);
@@ -534,6 +602,7 @@ function main(): void {
   writeFileSync(runtimeIncludePath, include, "utf8");
   manifest.generated.previewSha256 = previewHash;
   manifest.generated.spriteSha256 = spriteSha256;
+  manifest.generated.spriteBounds = spriteBounds;
   manifest.generated.statePngSha256 = statePngSha256;
   manifest.generated.runtimeIncludeSha256 = includeHash;
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");

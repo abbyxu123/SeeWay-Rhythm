@@ -51,10 +51,22 @@ evidence directory. It never writes to or erases a connected device.
 ## Verified build
 
 - Board identity: `seeway-rhythm-rlcd-4.2`, ESP32-S3 N16R8, 400 x 300 RLCD
-- Application: 2,745,328 bytes in a 4,128,768-byte OTA partition
+- Application: 3,553,280 bytes in a 4,128,768-byte OTA partition
 - Assets: 269,881 bytes in an 8,388,608-byte partition
 - Merged image: 8,658,489 bytes in 16,777,216-byte flash
 
 `build-evidence.json` is the tracked, machine-readable receipt for the latest
 reviewed build. The timestamped binaries stay out of Git because they are local
 build artifacts and must be verified again immediately before any flash.
+
+## Offline repair checkpoint
+
+The 2026-09-07 repair build has 512 passing tests and 14 native UI render scenarios.
+It has not been flashed. The Qimen runtime synchronization transport is not yet
+connected; registered MCP tools alone do not constitute end-to-end voice analysis.
+See [the scoped acceptance record](../../docs/testing/xiaozhi-offline-2026-09-07/README.md).
+
+The offline Chinese font has its own OFL-1.1 license in `assets/fonts/OFL.txt`.
+`scripts/prepare-font.mjs` records the source and output hashes.
+`bash scripts/preview.sh` renders the actual SeeWay UI with host LVGL.
+Neither script opens a serial device.

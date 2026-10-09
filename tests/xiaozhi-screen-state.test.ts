@@ -86,6 +86,14 @@ describe("SeeWay XiaoZhi screen state", () => {
 
     expect(display).toContain("RenderAnalogClock");
     expect(display).toContain("LV_OBJ_FLAG_HIDDEN");
+    expect(display).toContain("CreateProvisioningView");
+    expect(display).toContain(
+      "SetVisible(header_, active_view == ambient_view_)",
+    );
+    expect(
+      display.match(/root_, 0, 0, kScreenWidth, kScreenHeight/g)?.length ?? 0,
+    ).toBeGreaterThanOrEqual(4);
+    expect(display).not.toContain("character_box");
     expect(display).not.toContain("下一时辰");
     expect(display).not.toMatch(/RTC OK|UNSYNCED|KEY \d|BOOT \d|v0\.\d/);
   });

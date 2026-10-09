@@ -82,6 +82,7 @@ const VerifiedMarkerSchema = z
 export const MarketChartContextSchema = z
   .object({
     chartHash: Sha256Schema,
+    calculationTimeZone: z.literal("Asia/Shanghai"),
     verification: VerifiedMarkerSchema,
     validFrom: OffsetDateTimeSchema,
     validUntil: OffsetDateTimeSchema,

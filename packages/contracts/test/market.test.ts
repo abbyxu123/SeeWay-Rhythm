@@ -24,6 +24,7 @@ function instrument() {
 function chartContext() {
   return {
     chartHash: hash("a"),
+    calculationTimeZone: "Asia/Shanghai",
     verification: {
       status: "verified",
       verifierVersion: "qimen-verifier/v1",
@@ -75,6 +76,39 @@ describe("Qimen market contracts", () => {
       },
     });
     expect(parsed.personalOverlay?.expectedPersonalChartHash).toBe(hash("b"));
+  });
+
+  it("keeps the exchange timezone separate from the V1 calculation timezone", () => {
+    const parsed = MarketResultSchema.parse({
+      contractVersion: MARKET_RESULT_VERSION,
+      resultId: "market-result-timezone",
+      requestId: "market-request-timezone",
+      status: "unavailable",
+      methodVersion: MARKET_METHOD_PENDING_VERSION,
+      instrument: {
+        ...instrument(),
+        exchange: "NASDAQ",
+        exchangeTimeZone: "America/New_York",
+      },
+      targetTime: "2026-09-04T01:30:00+08:00",
+      chartContext: chartContext(),
+      generatedAt: "2026-09-04T01:02:00+08:00",
+      reasonCode: "MARKET_RULESET_UNVERIFIED",
+      candidateSourceIds: [],
+      prerequisites: ["historical_backtest"],
+    });
+
+    expect(parsed.instrument.exchangeTimeZone).toBe("America/New_York");
+    expect(parsed.chartContext.calculationTimeZone).toBe("Asia/Shanghai");
+    expect(
+      MarketResultSchema.safeParse({
+        ...parsed,
+        chartContext: {
+          ...parsed.chartContext,
+          calculationTimeZone: "America/New_York",
+        },
+      }).success,
+    ).toBe(false);
   });
 
   it("represents the current honest state without inventing market signals", () => {

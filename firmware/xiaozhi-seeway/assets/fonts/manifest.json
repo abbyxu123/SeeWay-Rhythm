@@ -1,0 +1,13 @@
+{
+  "name": "SeeWay Mono 14",
+  "generator": "lv_font_conv@1.5.3",
+  "size": 14,
+  "bpp": 1,
+  "ranges": "0x20-0x7e,0x4e00-0x9fff",
+  "symbols": "…·°，。！？：；、（）【】《》“”",
+  "source": "SourceHanSansSC-Normal.otf",
+  "license": "OFL-1.1",
+  "sourceSha256": "1ee89e1669362dee13851129c0a8a791a87521eb4148e5efbf5d26596738e25b",
+  "generatedSha256": "d13a1214608298c501c22ab2885297cf80adc699eb16628e896041f8d5caffd9",
+  "output": "overlay/main/seeway/seeway_font_14.c"
+}

@@ -13,7 +13,7 @@ if [[ -z "${IDF_PATH:-}" || ! -f "${IDF_PATH}/export.sh" ]]; then
   exit 2
 fi
 
-source "${IDF_PATH}/export.sh" >/dev/null
+source "${IDF_PATH}/export.sh"
 IDF_VERSION="$(idf.py --version)"
 if [[ "${IDF_VERSION}" != *"v${EXPECTED_IDF}"* && "${IDF_VERSION}" != *"${EXPECTED_IDF}"* ]]; then
   echo "ESP-IDF version mismatch: expected ${EXPECTED_IDF}, got ${IDF_VERSION}" >&2
@@ -23,6 +23,10 @@ if [[ ! -f "${PREPARED_SOURCE}/main/boards/seeway/seeway-rhythm-rlcd-4.2/config.
   echo "Prepared SeeWay source not found: ${PREPARED_SOURCE}" >&2
   exit 4
 fi
+
+# Refresh reused build trees as well as newly prepared source trees.
+cp -R "${ROOT_DIR}/overlay/main/." "${PREPARED_SOURCE}/main/"
+python3 "${SCRIPT_DIR}/apply-overlay.py" "${PREPARED_SOURCE}"
 
 cd "${PREPARED_SOURCE}"
 python3 scripts/build.py seeway/seeway-rhythm-rlcd-4.2 \

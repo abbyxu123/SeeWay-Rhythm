@@ -35,14 +35,18 @@ describe("SeeWay XiaoZhi character assets", () => {
         preview: string;
         previewSha256: string;
         spriteSha256: Record<string, string>;
+        spriteBounds: Record<
+          string,
+          { left: number; top: number; right: number; bottom: number }
+        >;
       };
     };
 
     expect(manifest.master.hasAlpha).toBe(true);
     expect(manifest.master.width).toBeGreaterThanOrEqual(1000);
     expect(manifest.master.height).toBeGreaterThanOrEqual(1000);
-    expect(manifest.production.canvas).toEqual({ width: 96, height: 96 });
-    expect(manifest.production.anchor).toEqual({ x: 48, y: 92 });
+    expect(manifest.production.canvas).toEqual({ width: 168, height: 168 });
+    expect(manifest.production.anchor).toEqual({ x: 84, y: 159 });
     expect(manifest.production.states.map((state) => state.name)).toEqual(
       approvedStates,
     );
@@ -51,6 +55,12 @@ describe("SeeWay XiaoZhi character assets", () => {
 
     for (const state of approvedStates) {
       expect(manifest.generated.spriteSha256[state]).toMatch(/^[a-f0-9]{64}$/);
+      const bounds = manifest.generated.spriteBounds[state];
+      expect(bounds).toBeDefined();
+      expect(bounds!.left).toBeGreaterThanOrEqual(8);
+      expect(bounds!.top).toBeGreaterThanOrEqual(8);
+      expect(bounds!.right).toBeLessThanOrEqual(159);
+      expect(bounds!.bottom).toBeLessThanOrEqual(159);
     }
 
     execFileSync(
